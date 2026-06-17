@@ -12,6 +12,11 @@ dist
 dist-ssr
 *.local
 
+# Generated audit artifacts (harness in audit/run.mjs is tracked)
+audit/screenshots
+audit/lighthouse.json
+audit/summary.json
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

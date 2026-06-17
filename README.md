@@ -33,6 +33,30 @@ Enter any password string and click **Run Benchmark** to derive 32-byte keys wit
 - **PBKDF2-SHA256** — required by WPA2 for Wi-Fi key derivation, used in LUKS disk encryption, and specified in NIST SP 800-132.
 - **HKDF-SHA256** — used by TLS 1.3 (RFC 8446) for deriving traffic keys from the handshake secret, and by the Signal Protocol for ratchet key derivation.
 
+## Accessibility & Testing
+
+KDF Arena is built to a WCAG 2.1 AA standard and verified by an automated audit
+harness (`audit/run.mjs`) that drives the real page in Chromium:
+
+- **axe-core** (WCAG 2.0/2.1 A + AA) on desktop *and* mobile viewports, in both
+  the initial and post-benchmark states — **0 violations**.
+- **Lighthouse** (mobile form factor) — **100 accessibility, 100 best-practices,
+  100 SEO, 100 performance**.
+- A **screen-reader accessibility-tree check** asserting the heading outline,
+  landmark/region names, labelled controls, the skip link, and the named timing
+  meters.
+
+Highlights: logical heading order, a skip link, a real `<form>` (Enter runs the
+benchmark), an `aria-live` results region with `aria-busy`, 44px touch targets, a
+16px input floor to prevent iOS zoom, system-preference theme detection,
+`prefers-reduced-motion` support, and AA-compliant contrast in both themes.
+
+```sh
+npm install
+npx playwright install chromium   # one-time, for the audit
+npm run audit                     # build + axe + Lighthouse + SR-tree checks
+```
+
 ---
 
 Part of [crypto-lab](https://systemslibrarian.github.io/crypto-lab/)

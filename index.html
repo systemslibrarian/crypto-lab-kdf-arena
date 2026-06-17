@@ -4,17 +4,29 @@
     <script>
       (function () {
         const saved = localStorage.getItem('theme');
-        document.documentElement.setAttribute('data-theme', saved ?? 'dark');
+        const system = window.matchMedia('(prefers-color-scheme: light)').matches
+          ? 'light'
+          : 'dark';
+        document.documentElement.setAttribute('data-theme', saved ?? system);
       })();
     </script>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="color-scheme" content="dark light" />
+    <meta name="theme-color" content="#16171d" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
     <meta name="description" content="Live benchmarking and comparison of HKDF, scrypt, Argon2id, and PBKDF2 key derivation functions in the browser." />
     <title>KDF Arena — crypto-lab</title>
   </head>
   <body>
     <div id="app"></div>
+    <noscript>
+      <p style="text-align: center; padding: 2rem; font-family: system-ui, sans-serif;">
+        KDF Arena runs key-derivation benchmarks in your browser and requires
+        JavaScript to be enabled.
+      </p>
+    </noscript>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

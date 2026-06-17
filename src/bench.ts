@@ -1,6 +1,6 @@
 import { hkdf } from '@noble/hashes/hkdf.js';
-import { pbkdf2 } from '@noble/hashes/pbkdf2.js';
-import { scrypt } from '@noble/hashes/scrypt.js';
+import { pbkdf2Async } from '@noble/hashes/pbkdf2.js';
+import { scryptAsync } from '@noble/hashes/scrypt.js';
 import { sha256 } from '@noble/hashes/sha2.js';
 
 export interface KDFParams {
@@ -33,9 +33,9 @@ export function runHKDF(p: KDFParams): BenchResult {
   };
 }
 
-export function runPBKDF2(p: KDFParams, iterations = 600_000): BenchResult {
+export async function runPBKDF2(p: KDFParams, iterations = 600_000): Promise<BenchResult> {
   const start = performance.now();
-  const output = pbkdf2(sha256, p.password, p.salt, { c: iterations, dkLen: p.outputLength });
+  const output = await pbkdf2Async(sha256, p.password, p.salt, { c: iterations, dkLen: p.outputLength });
   const timeMs = performance.now() - start;
   return {
     kdf: 'PBKDF2-SHA256',
@@ -46,14 +46,14 @@ export function runPBKDF2(p: KDFParams, iterations = 600_000): BenchResult {
   };
 }
 
-export function runScrypt(
+export async function runScrypt(
   p: KDFParams,
   N = 131072,
   r = 8,
   blockP = 1,
-): BenchResult {
+): Promise<BenchResult> {
   const start = performance.now();
-  const output = scrypt(p.password, p.salt, { N, r, p: blockP, dkLen: p.outputLength });
+  const output = await scryptAsync(p.password, p.salt, { N, r, p: blockP, dkLen: p.outputLength });
   const timeMs = performance.now() - start;
   return {
     kdf: 'scrypt',
@@ -97,8 +97,8 @@ export async function runAll(password: string): Promise<BenchResult[]> {
 
   const results: BenchResult[] = [];
   results.push(runHKDF(params));
-  results.push(runPBKDF2(params));
-  results.push(runScrypt(params));
+  results.push(await runPBKDF2(params));
+  results.push(await runScrypt(params));
   results.push(await runArgon2id(params));
 
   return results;
