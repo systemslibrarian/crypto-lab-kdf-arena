@@ -10,11 +10,11 @@ KDF Arena is a live, in-browser benchmarking tool that compares four key derivat
 - **Tuning cost parameters** — adjust iterations (PBKDF2), N/r/p (scrypt), or time/memory/parallelism (Argon2id) and observe the impact on derivation time and memory.
 - **Teaching the difference between HKDF and password KDFs** — the sub-millisecond HKDF result makes it visually obvious that HKDF is not designed to resist brute-force attacks on passwords.
 - **Comparing browser WASM performance** — Argon2id runs via `argon2-browser` (compiled to WASM), so results reflect real browser overhead.
-- **Do NOT use these results as a server-side benchmark** — browser single-threaded WASM performance does not represent native C/Rust implementations on a server.
+- Do NOT use these results as a server-side benchmark — browser single-threaded WASM performance does not represent native C/Rust implementations on a server.
 
 ## Live Demo
 
-[https://systemslibrarian.github.io/crypto-lab-kdf-arena/](https://systemslibrarian.github.io/crypto-lab-kdf-arena/)
+**[systemslibrarian.github.io/crypto-lab-kdf-arena](https://systemslibrarian.github.io/crypto-lab-kdf-arena/)**
 
 Enter any password string and click **Run Benchmark** to derive 32-byte keys with all four KDFs using a shared random salt. The results panel shows wall-clock time in milliseconds, estimated memory usage, and a hex preview of each derived key. A horizontal bar chart provides a visual timing comparison.
 
@@ -32,6 +32,23 @@ Enter any password string and click **Run Benchmark** to derive 32-byte keys wit
 - **scrypt** — used by Tarsnap for key derivation and by Litecoin's proof-of-work algorithm; recommended in RFC 7914.
 - **PBKDF2-SHA256** — required by WPA2 for Wi-Fi key derivation, used in LUKS disk encryption, and specified in NIST SP 800-132.
 - **HKDF-SHA256** — used by TLS 1.3 (RFC 8446) for deriving traffic keys from the handshake secret, and by the Signal Protocol for ratchet key derivation.
+
+## How to Run Locally
+
+```bash
+git clone https://github.com/systemslibrarian/crypto-lab-kdf-arena
+cd crypto-lab-kdf-arena
+npm install
+npm run dev
+```
+
+## Related Demos
+
+- [crypto-lab-kdf-chain](https://systemslibrarian.github.io/crypto-lab-kdf-chain/) — sibling KDF demo with a decision tree, derivation chains, and an attacker-cost model.
+- [crypto-lab-bcrypt-forge](https://systemslibrarian.github.io/crypto-lab-bcrypt-forge/) — bcrypt cost-factor tuning, the other major password-hashing family.
+- [crypto-lab-phantom-vault](https://systemslibrarian.github.io/crypto-lab-phantom-vault/) — PBKDF2-SHA-256 key stretching with HMAC-DRBG in a vault context.
+- [crypto-lab-shadow-vault](https://systemslibrarian.github.io/crypto-lab-shadow-vault/) — Argon2id plus ChaCha20-Poly1305 for file encryption.
+- [crypto-lab-mac-race](https://systemslibrarian.github.io/crypto-lab-mac-race/) — HMAC and other MACs, the PRF underneath these KDFs.
 
 ## Accessibility & Testing
 
@@ -59,6 +76,6 @@ npm run audit                     # build + axe + Lighthouse + SR-tree checks
 
 ---
 
-Part of [crypto-lab](https://systemslibrarian.github.io/crypto-lab/)
+*One of 60+ browser demos in the [Crypto Lab](https://crypto-lab.systemslibrarian.dev/) suite.*
 
-"So whether you eat or drink or whatever you do, do it all for the glory of God." — 1 Corinthians 10:31
+*"So whether you eat or drink or whatever you do, do it all for the glory of God." — 1 Corinthians 10:31*
