@@ -25,6 +25,13 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
 <footer>
   Part of <a href="https://systemslibrarian.github.io/crypto-lab/" rel="noopener">crypto-lab</a> ·
   <a href="https://github.com/systemslibrarian/crypto-lab-kdf-arena" rel="noopener">Source</a>
+  <br />
+  Related demos:
+  <a href="https://systemslibrarian.github.io/crypto-lab-kdf-chain/" rel="noopener">crypto-lab-kdf-chain</a> ·
+  <a href="https://systemslibrarian.github.io/crypto-lab-bcrypt-forge/" rel="noopener">crypto-lab-bcrypt-forge</a> ·
+  <a href="https://systemslibrarian.github.io/crypto-lab-phantom-vault/" rel="noopener">crypto-lab-phantom-vault</a> ·
+  <a href="https://systemslibrarian.github.io/crypto-lab-shadow-vault/" rel="noopener">crypto-lab-shadow-vault</a> ·
+  <a href="https://systemslibrarian.github.io/crypto-lab-mac-race/" rel="noopener">crypto-lab-mac-race</a>
 </footer>
 `;
 
