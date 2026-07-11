@@ -94,7 +94,9 @@ async function screenReaderChecks(page) {
   await want('h2 "Timing comparison"', page.getByRole('heading', { level: 2, name: 'Timing comparison' }), 1);
   await want('4 KDF h3 headings', page.getByRole('heading', { level: 3 }), 4);
   await want('Run button has accessible name', page.getByRole('button', { name: 'Run Benchmark' }), 1);
-  await want('Theme toggle has accessible name', page.getByRole('button', { name: /Switch to (light|dark) mode/ }), 1);
+  // The shared crypto-lab topbar hides the lab's own toggle and provides its
+  // own ("Toggle color theme"), so that is the one exposed to screen readers.
+  await want('Theme toggle has accessible name', page.getByRole('button', { name: 'Toggle color theme' }), 1);
   await want('Password textbox is labelled', page.getByRole('textbox', { name: 'Password' }), 1);
   await want('Skip link is reachable', page.getByRole('link', { name: 'Skip to results' }), 1);
   await want('Results is a named region', page.getByRole('region', { name: 'Benchmark results' }), 1);

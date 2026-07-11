@@ -25,7 +25,8 @@
   font: 18px/145% var(--sans);
   letter-spacing: 0.18px;
   color: var(--text);
-  background: var(--bg);
+  background-color: var(--bg);
+  color-scheme: light;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -72,7 +73,7 @@ body {
   transform: translate(-50%, -150%);
   z-index: 10;
   padding: 0.5rem 1rem;
-  background: var(--accent-fg);
+  background-color: var(--accent-fg);
   color: var(--on-accent);
   border-radius: 0 0 6px 6px;
   text-decoration: none;
@@ -150,7 +151,7 @@ code {
   font-size: 0.85em;
   line-height: 135%;
   padding: 2px 6px;
-  background: var(--code-bg);
+  background-color: var(--code-bg);
   border-radius: 4px;
   color: var(--text-h);
 }
@@ -187,7 +188,7 @@ header h1 {
   height: 2.75rem;
   border-radius: 50%;
   border: 1px solid var(--border);
-  background: var(--bg);
+  background-color: var(--bg);
   color: var(--text-h);
   font-size: 1.25rem;
   cursor: pointer;
@@ -239,7 +240,7 @@ header h1 {
   min-height: 44px;
   border: 1px solid var(--border);
   border-radius: 4px;
-  background: var(--code-bg);
+  background-color: var(--code-bg);
   color: var(--text-h);
   width: 14rem;
   max-width: 100%;
@@ -257,7 +258,7 @@ button.run-btn {
   padding: 0.5rem 1.5rem;
   border: none;
   border-radius: 6px;
-  background: var(--accent-fg);
+  background-color: var(--accent-fg);
   color: var(--on-accent);
   cursor: pointer;
   min-height: 44px;
@@ -268,7 +269,7 @@ button.run-btn:disabled {
   /* Dim to a muted surface rather than via opacity: opacity would drop the
      label below AA contrast (and read as washed-out for low-vision users)
      while a benchmark runs. --text on --code-bg stays >=4.5:1 in both themes. */
-  background: var(--code-bg);
+  background-color: var(--code-bg);
   color: var(--text);
   cursor: not-allowed;
 }
@@ -318,7 +319,7 @@ button.run-btn:focus-visible {
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 1rem;
-  background: var(--code-bg);
+  background-color: var(--code-bg);
 }
 
 .result-card h3 {
@@ -408,7 +409,7 @@ button.run-btn:focus-visible {
 .bar-track {
   flex: 1;
   height: 1.75rem;
-  background: var(--code-bg);
+  background-color: var(--code-bg);
   border-radius: 4px;
   overflow: hidden;
   position: relative;
@@ -416,7 +417,7 @@ button.run-btn:focus-visible {
 
 .bar-fill {
   height: 100%;
-  background: var(--accent);
+  background-color: var(--accent);
   border-radius: 4px;
   transition: width 0.6s ease;
   min-width: 2px;

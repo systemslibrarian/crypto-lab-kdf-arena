@@ -3,14 +3,18 @@ import { runAll } from './bench.ts';
 import { renderResults, renderPlaceholder, renderRunning } from './ui.ts';
 
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
-<a class="skip-link" href="#results">Skip to results</a>
-<header>
-  <h1>KDF Arena</h1>
-  <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch to light mode">
-    <span class="theme-toggle-icon" aria-hidden="true">&#127769;</span>
-  </button>
-</header>
 <main id="main">
+  <!-- Skip link and title header live inside <main>: the shared crypto-lab
+       topbar is the page's single banner landmark, so the page header must not
+       be a second banner, and all content (skip link included) must sit inside
+       a landmark (axe landmark-no-duplicate-banner / region). -->
+  <a class="skip-link" href="#results">Skip to results</a>
+  <header>
+    <h1>KDF Arena</h1>
+    <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch to light mode">
+      <span class="theme-toggle-icon" aria-hidden="true">&#127769;</span>
+    </button>
+  </header>
   <form class="controls" id="bench-form">
     <div class="control-group">
       <label for="password-input">Password</label>
