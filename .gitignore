@@ -17,6 +17,10 @@ audit/screenshots
 audit/lighthouse.json
 audit/summary.json
 
+# Playwright a11y gate artifacts
+playwright-report
+test-results
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

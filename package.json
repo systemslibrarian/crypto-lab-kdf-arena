@@ -7,10 +7,12 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
+    "test:a11y": "playwright test e2e/a11y.spec.ts",
     "audit": "npm run build && node audit/run.mjs"
   },
   "devDependencies": {
-    "@axe-core/playwright": "^4.11.3",
+    "@axe-core/playwright": "^4.12.1",
+    "@playwright/test": "^1.61.1",
     "chrome-launcher": "^1.2.1",
     "lighthouse": "^13.4.0",
     "playwright": "^1.61.0",
