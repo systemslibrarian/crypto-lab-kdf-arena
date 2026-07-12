@@ -16,7 +16,15 @@ import { scrypt } from '@noble/hashes/scrypt.js';
 import { argon2id } from '@noble/hashes/argon2.js';
 import { sha256 } from '@noble/hashes/sha2.js';
 
-import { runHKDF, runPBKDF2, runScrypt, runArgon2id, runAll } from '../src/bench.ts';
+import {
+  runHKDF,
+  runPBKDF2,
+  runScrypt,
+  runArgon2id,
+  runAll,
+  estimateAttacker,
+  type BenchResult,
+} from '../src/bench.ts';
 
 function hex(bytes: Uint8Array): string {
   return Array.from(bytes)
@@ -154,7 +162,7 @@ describe('bench wrappers derive correct, deterministic keys', () => {
 
 describe('runAll', () => {
   test('runs all four KDFs and wires options through to each', async () => {
-    const results = await runAll('correct horse battery staple', {
+    const { results } = await runAll('correct horse battery staple', {
       pbkdf2Iterations: 1000,
       scryptN: 256,
       scryptR: 8,
@@ -178,14 +186,40 @@ describe('runAll', () => {
     expect(results[3].params).toMatchObject({ time: 1, memory: 256, parallelism: 1 });
   });
 
+  test('a fixed salt reproduces identical keys across runs (rainbow-table lesson)', async () => {
+    const salt = new Uint8Array(16).fill(0x5a);
+    const fast = { pbkdf2Iterations: 1000, scryptN: 256, argon2Time: 1, argon2Memory: 256, argon2Parallelism: 1, fixedSalt: salt };
+    const a = await runAll('pw', fast);
+    const b = await runAll('pw', fast);
+    // With the salt pinned, every KDF must derive the SAME key both runs — the
+    // visible symptom the "reuse salt" toggle teaches.
+    for (let i = 0; i < a.results.length; i++) {
+      expect(hex(a.results[i].output)).toBe(hex(b.results[i].output));
+    }
+    expect(hex(a.salt)).toBe(hex(salt));
+  });
+
   test('a random salt makes two runs of the same password differ', async () => {
     const fast = { pbkdf2Iterations: 1000, scryptN: 256, argon2Time: 1, argon2Memory: 256, argon2Parallelism: 1 };
     const a = await runAll('pw', fast);
     const b = await runAll('pw', fast);
     // HKDF/PBKDF2/scrypt/Argon2id all take the per-run random salt, so every
     // derived key should differ between runs.
-    for (let i = 0; i < a.length; i++) {
-      expect(hex(a[i].output)).not.toBe(hex(b[i].output));
+    for (let i = 0; i < a.results.length; i++) {
+      expect(hex(a.results[i].output)).not.toBe(hex(b.results[i].output));
     }
+  });
+
+  test('estimateAttacker: memory-hard KDFs are RAM-bound and far slower to crack', () => {
+    const base = { params: {}, timeMs: 50, output: new Uint8Array(32) };
+    const pbkdf2: BenchResult = { ...base, kdf: 'PBKDF2-SHA256', memoryNominalKB: 1 };
+    const argon2: BenchResult = { ...base, kdf: 'Argon2id', memoryNominalKB: 65_536 };
+    const ep = estimateAttacker(pbkdf2);
+    const ea = estimateAttacker(argon2);
+    // Same time, but Argon2id's memory wall drops the attacker's rate hard and
+    // flips the bottleneck from compute to memory — the whole teaching point.
+    expect(ep.boundedBy).toBe('compute');
+    expect(ea.boundedBy).toBe('memory');
+    expect(ea.guessesPerSec).toBeLessThan(ep.guessesPerSec);
   });
 });

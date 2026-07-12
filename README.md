@@ -6,6 +6,18 @@ KDF Arena is a live, in-browser benchmarking tool that compares four key derivat
 
 > **A note on the memory figure.** The "nominal memory" shown per KDF is *defined, not measured*: for scrypt it is `128 * N * r` bytes and for Argon2id it is the `memory` parameter (both are the algorithms' actual working-set sizes), while for HKDF and PBKDF2 — which are compute-bound, not memory-hard — it is the small, roughly-constant scratch space they use. It is not a live RSS/heap measurement of the browser.
 
+The live page opens with a plain-language framing of *what a KDF is* and *the compute-hard vs memory-hard tension* the arena teaches, so a first-time visitor gets the "why" without opening this README. Results are shown through a defender/attacker lens — alongside the wall-clock time, each KDF reports an order-of-magnitude **attacker guesses/sec** estimate (derived from that run's real time and the algorithm's defined memory cost) and whether it is compute- or RAM-bound — and a second, log-scaled bar chart plots the **per-guess memory cost** so the memory-hardness axis is never hidden behind timing alone.
+
+## Exhibits
+
+1. **On-page framing block** — a college-level intro defining KDFs and the compute-hard (PBKDF2) vs memory-hard (scrypt, Argon2id) tension, calling out HKDF as the deliberately-included *wrong tool*.
+2. **Four-KDF benchmark** — HKDF-SHA256, PBKDF2-SHA256, scrypt, and Argon2id derived in-browser from a shared salt at adjustable cost parameters, each verified against its RFC known-answer vector.
+3. **Dual charts** — wall-clock *defender cost* (linear) beside *attacker's per-guess memory cost* (log scale), so a learner cannot mistake Argon2id for "just a slower PBKDF2".
+4. **Attacker-lens estimate** — a live, clearly-labelled order-of-magnitude guesses/sec figure per KDF plus its dominating bottleneck (compute vs memory), updating as the cost knobs change.
+5. **Memory-fill visual** — for the memory-hard KDFs, a grid of cells that fills in proportion to the real nominal working set, making "memory-hard" something you see.
+6. **Salt-uniqueness lesson** — an on-page callout explaining why the derived key changes each run, with a *Reuse salt across runs* toggle that reproduces identical keys to demonstrate the rainbow-table failure mode.
+7. **Jargon glossary** — collapsible in-page definitions for extract-and-expand, iterations/compute-hardness, memory-hardness, lanes/parallelism, and KiB.
+
 ## When to Use It
 
 - **Choosing a password KDF for a new system** — run the benchmark on target hardware to see real timing costs before committing to PBKDF2, scrypt, or Argon2id.
@@ -17,7 +29,7 @@ KDF Arena is a live, in-browser benchmarking tool that compares four key derivat
 
 **[systemslibrarian.github.io/crypto-lab-kdf-arena](https://systemslibrarian.github.io/crypto-lab-kdf-arena/)**
 
-Enter any password string and click **Run Benchmark** to derive 32-byte keys with all four KDFs using a shared random salt. The results panel shows wall-clock time in milliseconds, the nominal (defined, not measured) memory cost, and a hex preview of each derived key. A horizontal bar chart provides a visual timing comparison. Expand **Cost parameters** to tune each KDF's cost knobs before running.
+Enter any password string and click **Run Benchmark** to derive 32-byte keys with all four KDFs using a shared random salt. The results panel shows wall-clock time in milliseconds, the nominal (defined, not measured) memory cost, an order-of-magnitude attacker guesses/sec estimate, and a hex preview of each derived key. Two bar charts compare defender time and attacker per-guess memory cost (log scale) side by side, and the memory-hard KDFs show a memory-fill grid. Toggle **Reuse salt across runs** to see identical passwords derive identical keys. Expand **Cost parameters** to tune each KDF's cost knobs before running.
 
 ## What Can Go Wrong
 
