@@ -12,11 +12,12 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
   <header class="cl-hero">
     <div class="cl-hero-main">
       <h1 class="cl-hero-title">KDF Arena</h1>
-      <p class="cl-hero-sub">key derivation functions · compute- vs memory-hardness</p>
+      <p class="cl-hero-sub">KDFs · compute- vs memory-hardness</p>
+      <p class="cl-hero-desc">Races PBKDF2, scrypt, Argon2id, and HKDF on the same password so you can time each derivation and watch compute-hard, memory-hard, and extract-and-expand designs behave differently.</p>
     </div>
     <aside class="cl-hero-why" aria-label="Why it matters">
       <span class="cl-hero-why-label">WHY IT MATTERS</span>
-      <p class="cl-hero-why-text">Password hashing has to stay slow for attackers but fast enough to log you in. Compute-hard PBKDF2 falls to GPUs; memory-hard scrypt and Argon2id don't. HKDF isn't a password hash at all — it expands already-strong keys.</p>
+      <p class="cl-hero-why-text">Every stolen password database is only as safe as the KDF behind it. Compute-hard PBKDF2 falls to cheap GPU farms; memory-hard scrypt and Argon2id make each guess cost real RAM. HKDF is the wrong tool — it expands strong keys, it can't slow a guesser.</p>
     </aside>
     <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch to light mode">
       <span class="theme-toggle-icon" aria-hidden="true">&#127769;</span>
