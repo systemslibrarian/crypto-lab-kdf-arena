@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
+    "test": "vitest run",
     "test:a11y": "playwright test e2e/a11y.spec.ts",
     "audit": "npm run build && node audit/run.mjs"
   },
@@ -17,10 +18,10 @@
     "lighthouse": "^13.4.0",
     "playwright": "^1.61.0",
     "typescript": "~6.0.2",
-    "vite": "^8.0.4"
+    "vite": "^8.0.4",
+    "vitest": "^4.1.10"
   },
   "dependencies": {
-    "@noble/hashes": "^2.0.1",
-    "argon2-browser": "^1.18.0"
+    "@noble/hashes": "^2.0.1"
   }
 }

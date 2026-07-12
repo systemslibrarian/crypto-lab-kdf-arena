@@ -26,7 +26,7 @@ export function renderResults(results: BenchResult[]): string {
         <h3>${escapeHtml(r.kdf)}</h3>
         <p class="time">${r.timeMs.toFixed(1)}<span class="time-unit"> ms</span></p>
         <p class="params">${paramsStr}</p>
-        <p class="memory">Memory: ~${r.memoryEstimateKB.toLocaleString()} KB</p>
+        <p class="memory">Nominal memory: ~${r.memoryNominalKB.toLocaleString()} KB <span class="memory-caveat" title="Algorithm-defined working-set size, not measured RAM. HKDF/PBKDF2 are compute-bound, so their footprint is tiny and approximate.">(defined, not measured)</span></p>
         <p class="output-preview">Derived key: <code>${hexPreview}</code></p>
         ${note}
       </li>`;
