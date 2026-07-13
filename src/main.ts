@@ -1,6 +1,12 @@
 import './style.css';
 import { runAll, type RunOptions } from './bench.ts';
-import { renderResults, renderPlaceholder, renderRunning } from './ui.ts';
+import {
+  renderResults,
+  renderPlaceholder,
+  renderRunning,
+  wireMemChartToggle,
+  wireAttackerRig,
+} from './ui.ts';
 
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
 <main id="main">
@@ -99,6 +105,10 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
           <input id="pbkdf2-iterations" name="pbkdf2-iterations" type="number"
                  inputmode="numeric" min="1" max="10000000" step="1" value="600000" />
         </div>
+        <div class="preset-row">
+          <button type="button" class="preset-btn" data-preset-target="pbkdf2-iterations" data-preset-weak="1000" data-preset-strong="600000">Weaken: 1,000 iterations</button>
+          <span class="preset-hint">a cliff most newcomers never find by typing</span>
+        </div>
       </fieldset>
       <fieldset class="param-set">
         <legend>scrypt</legend>
@@ -134,6 +144,10 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
           <label for="argon2-parallelism">Parallelism (lanes)</label>
           <input id="argon2-parallelism" name="argon2-parallelism" type="number" inputmode="numeric"
                  min="1" max="16" step="1" value="4" />
+        </div>
+        <div class="preset-row">
+          <button type="button" class="preset-btn" data-preset-target="argon2-memory" data-preset-weak="8192" data-preset-strong="65536">Weaken: 8 MiB memory</button>
+          <span class="preset-hint">below OWASP's 64 MiB floor — the RAM wall shrinks 8&times;</span>
         </div>
       </fieldset>
     </details>
@@ -226,6 +240,10 @@ function setupBenchmark(): void {
         saltReused: !!opts.fixedSalt,
         salt,
       });
+      // Wire the interactive exhibits injected into the results markup: the
+      // linear/log memory-chart toggle and the attacker-rig lane visualization.
+      wireMemChartToggle(resultsDiv);
+      wireAttackerRig(resultsDiv);
     } catch (err) {
       const safeMsg = (err instanceof Error ? err.message : String(err)).replace(/</g, '&lt;').replace(/>/g, '&gt;');
       resultsDiv.innerHTML = `<div class="status status-error" role="alert">Error: ${safeMsg}</div>`;
@@ -236,5 +254,32 @@ function setupBenchmark(): void {
   });
 }
 
+// Guided weak-vs-strong toggle: newcomers who don't know good parameter ranges
+// won't discover the cliff by hand-typing. Each preset button flips its target
+// cost input between a strong (default) and a deliberately weak value, so the
+// resulting jump in attacker guesses/sec after re-running is a one-click reveal.
+function setupPresets(): void {
+  document.querySelectorAll<HTMLButtonElement>('.preset-btn').forEach((btn) => {
+    const targetId = btn.dataset.presetTarget!;
+    const weak = btn.dataset.presetWeak!;
+    const strong = btn.dataset.presetStrong!;
+    const input = document.getElementById(targetId) as HTMLInputElement | null;
+    if (!input) return;
+    const baseLabel = btn.textContent ?? '';
+    btn.setAttribute('aria-pressed', 'false');
+    btn.addEventListener('click', () => {
+      const nowWeak = input.value !== weak;
+      input.value = nowWeak ? weak : strong;
+      btn.classList.toggle('is-weak', nowWeak);
+      btn.setAttribute('aria-pressed', nowWeak ? 'true' : 'false');
+      btn.textContent = nowWeak ? 'Restore strong default' : baseLabel;
+      // Keep the "Cost parameters" panel open so the change is visible.
+      const panel = document.getElementById('params-advanced') as HTMLDetailsElement | null;
+      if (panel) panel.open = true;
+    });
+  });
+}
+
 setupThemeToggle();
 setupBenchmark();
+setupPresets();

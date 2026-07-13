@@ -48,7 +48,7 @@ export interface BenchResult {
  * by the same *ratio* a real attacker would see, which is the intuition we want
  * to teach; the absolute magnitude is explicitly framed as "order-of-magnitude".
  */
-const ATTACKER = {
+export const ATTACKER = {
   // A hypothetical rig: massively parallel, but with finite fast memory.
   parallelLanes: 8192, // concurrent derivations when memory is not the bottleneck
   ramKB: 8 * 1024 * 1024, // 8 GiB of fast memory available to the cracker
