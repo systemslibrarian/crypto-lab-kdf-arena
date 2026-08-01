@@ -147,7 +147,7 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
         </div>
         <div class="preset-row">
           <button type="button" class="preset-btn" data-preset-target="argon2-memory" data-preset-weak="8192" data-preset-strong="65536">Weaken: 8 MiB memory</button>
-          <span class="preset-hint">below OWASP's 64 MiB floor — the RAM wall shrinks 8&times;</span>
+          <span class="preset-hint">below RFC 9106's 64 MiB recommended option — the RAM wall shrinks 8&times;</span>
         </div>
       </fieldset>
     </details>

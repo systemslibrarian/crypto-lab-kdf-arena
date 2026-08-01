@@ -36,17 +36,17 @@ Enter any password string and click **Run Benchmark** to derive 32-byte keys wit
 
 ## What Can Go Wrong
 
-- **PBKDF2 iteration count too low** — using fewer than 600,000 SHA-256 iterations (NIST SP 800-132 2023 guidance) makes offline brute-force feasible on modern GPUs.
+- **PBKDF2 iteration count too low** — using fewer than 600,000 SHA-256 iterations (OWASP Password Storage Cheat Sheet; NIST SP 800-132 only sets a floor of 1,000) makes offline brute-force feasible on modern GPUs.
 - **scrypt N parameter too small** — if `128 * N * r` fits comfortably in GPU memory, scrypt loses its memory-hardness advantage over PBKDF2.
-- **Argon2id memory set below 64 MB** — reducing the `memory` parameter shrinks the cost asymmetry between defender and attacker; OWASP recommends at least 64 MB for interactive logins.
+- **Argon2id memory set too low** — reducing the `memory` parameter shrinks the cost asymmetry between defender and attacker. RFC 9106's second recommended option is 64 MiB; OWASP's stated minimum for interactive logins is 19 MiB (m=19456, t=2, p=1).
 - **Using HKDF to hash passwords** — HKDF has no cost parameter and completes in microseconds, offering zero brute-force resistance.
 - **Salt reuse across users** — all four KDFs require a unique random salt per credential; reusing a salt enables precomputation (rainbow-table) attacks.
 
 ## Real-World Usage
 
-- **Argon2id** — default password hash in the libsodium `crypto_pwhash` API, adopted by 1Password, Bitwarden, and the PHC (Password Hashing Competition) winner.
+- **Argon2id** — winner of the Password Hashing Competition (2015), the default password hash in the libsodium `crypto_pwhash` API, and a selectable KDF in Bitwarden.
 - **scrypt** — used by Tarsnap for key derivation and by Litecoin's proof-of-work algorithm; recommended in RFC 7914.
-- **PBKDF2-SHA256** — required by WPA2 for Wi-Fi key derivation, used in LUKS disk encryption, and specified in NIST SP 800-132.
+- **PBKDF2** — used for Wi-Fi key derivation in WPA2 (PBKDF2-HMAC-SHA1, 4096 iterations), in LUKS disk encryption, and specified in NIST SP 800-132.
 - **HKDF-SHA256** — used by TLS 1.3 (RFC 8446) for deriving traffic keys from the handshake secret, and by the Signal Protocol for ratchet key derivation.
 
 ## How to Run Locally
@@ -70,7 +70,7 @@ npm run dev
 
 **Crypto correctness.** `npm test` runs a [Vitest](https://vitest.dev) suite
 (`test/kdf.test.ts`) that recomputes the published RFC known-answer vectors —
-HKDF-SHA256 (RFC 5869), PBKDF2-HMAC-SHA256 (RFC 7914 §10), scrypt (RFC 7914
+HKDF-SHA256 (RFC 5869), PBKDF2-HMAC-SHA256 (RFC 7914 §11), scrypt (RFC 7914
 §12), and Argon2id (RFC 9106 §5.3) — through the *same* functions the UI calls
 in `src/bench.ts`, plus determinism, parameter-liveness, and salt-uniqueness
 property tests. A regression that swapped an algorithm, dropped a parameter, or

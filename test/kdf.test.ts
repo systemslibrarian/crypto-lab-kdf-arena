@@ -63,7 +63,7 @@ describe('RFC known-answer vectors', () => {
     );
   });
 
-  test('PBKDF2-HMAC-SHA256 reproduces RFC 7914 §10 (c=1, 64 B)', () => {
+  test('PBKDF2-HMAC-SHA256 reproduces RFC 7914 §11 (c=1, 64 B)', () => {
     const dk = pbkdf2(sha256, 'passwd', 'salt', { c: 1, dkLen: 64 });
     expect(hex(dk)).toBe(
       '55ac046e56e3089fec1691c22544b605f94185216dde0465e68b9d57c20dacbc' +
@@ -71,7 +71,7 @@ describe('RFC known-answer vectors', () => {
     );
   });
 
-  test('PBKDF2-HMAC-SHA256 reproduces RFC 7914 §10 (c=80000, 64 B)', () => {
+  test('PBKDF2-HMAC-SHA256 reproduces RFC 7914 §11 (c=80000, 64 B)', () => {
     const dk = pbkdf2(sha256, 'Password', 'NaCl', { c: 80000, dkLen: 64 });
     expect(hex(dk)).toBe(
       '4ddcd8f60b98be21830cee5ef22701f9641a4418d04c0414aeff08876b34ab56' +
