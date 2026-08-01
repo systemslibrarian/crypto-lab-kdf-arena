@@ -2,11 +2,18 @@
  * kdf.test.ts — RFC known-answer tests for every KDF the arena benchmarks.
  *
  * The demo's honesty claim is "these are the real, standard KDFs." That is
- * only trustworthy if the code reproduces the standards' own published
- * vectors byte-for-byte. These tests recompute each RFC vector through the
- * SAME functions the UI calls (src/bench.ts), so a regression that silently
- * broke the crypto — wrong parameter, swapped algorithm, truncated output —
- * would fail here instead of shipping.
+ * only trustworthy if the code reproduces the standards' own published vectors
+ * byte-for-byte, so a regression that silently broke the crypto — wrong
+ * parameter, swapped algorithm, truncated output — fails here instead of
+ * shipping.
+ *
+ * Two of the four vectors run through the exact src/bench.ts wrappers the UI
+ * calls: runPBKDF2 reproduces RFC 7914 §11 and runScrypt reproduces §12. The
+ * other two cannot, and this file must not claim otherwise — runHKDF pins its
+ * own `info` string, and runArgon2id exposes no secret key or associated data,
+ * both of which the published vectors require. Those two are pinned at the
+ * primitive, and their wrappers are separately asserted to agree byte-for-byte
+ * with a direct @noble/hashes call at the same parameters.
  */
 import { describe, expect, test } from 'vitest';
 
@@ -23,8 +30,10 @@ import {
   runArgon2id,
   runAll,
   estimateAttacker,
+  ATTACKER,
   type BenchResult,
 } from '../src/bench.ts';
+import { renderResults } from '../src/ui.ts';
 
 function hex(bytes: Uint8Array): string {
   return Array.from(bytes)
@@ -157,6 +166,49 @@ describe('bench wrappers derive correct, deterministic keys', () => {
     const strong = await runPBKDF2({ password: 'pw', salt, outputLength: 32 }, 600_000);
     const weak = await runPBKDF2({ password: 'pw', salt, outputLength: 32 }, 1000);
     expect(hex(strong.output)).not.toBe(hex(weak.output));
+  });
+});
+
+// The captions under the memory grids and the memory chart quote a ratio. Cost
+// parameters are adjustable and the "Weaken" presets exist specifically to move
+// them, so a figure fixed at authoring time would describe a different run than
+// the one on screen. These pin that the numbers come from the results array.
+describe('memory captions are computed from the run, not hardcoded', () => {
+  const card = (kdf: string, memoryNominalKB: number): BenchResult => ({
+    kdf,
+    params: {},
+    timeMs: 100,
+    output: new Uint8Array(32),
+    memoryNominalKB,
+  });
+  const meta = { saltReused: false, salt: new Uint8Array(16) };
+  const caption = (html: string): string =>
+    (html.match(/<p class="mem-showcase-cap">([\s\S]*?)<\/p>/)?.[1] ?? '').replace(/<[^>]+>/g, '');
+
+  test('the shipped defaults quote ~130,000x, not the old fixed ~64,000x', () => {
+    // scrypt N=131072,r=8 => 128*N*r = 128 MiB, which outweighs Argon2id's 64 MiB.
+    const html = renderResults(
+      [card('HKDF-SHA256', 1), card('PBKDF2-SHA256', 1), card('scrypt', 131_072), card('Argon2id', 65_536)],
+      meta,
+    );
+    expect(caption(html)).toMatch(/130,000×/);
+    expect(caption(html)).toMatch(/scrypt, the hungriest KDF/);
+    expect(html).not.toMatch(/64,000/);
+  });
+
+  test('weakening Argon2id restates the gap instead of leaving a stale figure', () => {
+    const html = renderResults(
+      [card('HKDF-SHA256', 1), card('PBKDF2-SHA256', 1), card('scrypt', 256), card('Argon2id', 8_192)],
+      meta,
+    );
+    expect(caption(html)).toMatch(/8,200×/);
+    expect(caption(html)).toMatch(/Argon2id, the hungriest KDF/);
+    expect(html).toMatch(/data-ratio-words="thousands of times"/);
+  });
+
+  test('the attacker tooltip reports the rig from the model, not a literal', () => {
+    const html = renderResults([card('PBKDF2-SHA256', 1)], meta);
+    expect(html).toContain(`${ATTACKER.parallelLanes.toLocaleString()}-lane`);
   });
 });
 

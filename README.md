@@ -2,18 +2,18 @@
 
 ## What It Is
 
-KDF Arena is a live, in-browser benchmarking tool that compares four key derivation functions side-by-side: HKDF-SHA256, PBKDF2-SHA256, scrypt, and Argon2id. All four run in pure JavaScript via [`@noble/hashes`](https://github.com/paulmillr/noble-hashes) — no WASM, no native bindings — and every one is checked against its RFC known-answer vector in the test suite (see **Accessibility & Testing**). It measures wall-clock derivation time and reports each function's *nominal* (algorithm-defined, not measured) memory cost using identical input (password + random 16-byte salt). HKDF is included for educational contrast — it is an extract-and-expand KDF for already-strong key material, not a password-hashing function. The three password KDFs (PBKDF2, scrypt, Argon2id) are compared at their recommended default parameters to illustrate the trade-off between iteration hardness and memory hardness, and each parameter is adjustable in the UI's **Cost parameters** panel.
+KDF Arena is a live, in-browser benchmarking tool that compares four key derivation functions side-by-side: HKDF-SHA256, PBKDF2-SHA256, scrypt, and Argon2id. All four run in pure JavaScript via [`@noble/hashes`](https://github.com/paulmillr/noble-hashes) — no WASM, no native bindings — and every one is pinned to its RFC known-answer vector in the test suite (see **Accessibility & Testing**). It measures wall-clock derivation time and reports each function's *nominal* (algorithm-defined, not measured) memory cost using identical input (password + random 16-byte salt). HKDF is included for educational contrast — it is an extract-and-expand KDF for already-strong key material, not a password-hashing function. The three password KDFs (PBKDF2, scrypt, Argon2id) are compared at their recommended default parameters to illustrate the trade-off between iteration hardness and memory hardness, and each parameter is adjustable in the UI's **Cost parameters** panel.
 
 > **A note on the memory figure.** The "nominal memory" shown per KDF is *defined, not measured*: for scrypt it is `128 * N * r` bytes and for Argon2id it is the `memory` parameter (both are the algorithms' actual working-set sizes), while for HKDF and PBKDF2 — which are compute-bound, not memory-hard — it is the small, roughly-constant scratch space they use. It is not a live RSS/heap measurement of the browser.
 
-The live page opens with a plain-language framing of *what a KDF is* and *the compute-hard vs memory-hard tension* the arena teaches, so a first-time visitor gets the "why" without opening this README. Results are shown through a defender/attacker lens — alongside the wall-clock time, each KDF reports an order-of-magnitude **attacker guesses/sec** estimate (derived from that run's real time and the algorithm's defined memory cost) and whether it is compute- or RAM-bound. The memory-hardness axis is then made *visible*, not just tabulated: four same-size **memory-fill grids** sit in one row on a true linear scale, so PBKDF2/HKDF read as one lonely lit cell beside scrypt's and Argon2id's near-full grids; an interactive **RAM-wall** exhibit draws the attacker's fixed RAM pool and compute lanes and lets you drag Argon2id's memory parameter to watch idle cores get evicted in real time; and the per-guess-memory bar chart defaults to a **linear** scale (with a one-click switch to log) so the honest ~64,000× gap lands before it is compressed for legibility.
+The live page opens with a plain-language framing of *what a KDF is* and *the compute-hard vs memory-hard tension* the arena teaches, so a first-time visitor gets the "why" without opening this README. Results are shown through a defender/attacker lens — alongside the wall-clock time, each KDF reports an order-of-magnitude **attacker guesses/sec** estimate (derived from that run's real time and the algorithm's defined memory cost) and whether it is compute- or RAM-bound. The memory-hardness axis is then made *visible*, not just tabulated: four same-size **memory-fill grids** sit in one row on a true linear scale, so PBKDF2/HKDF read as one lonely lit cell beside the memory-hard grids (at the shipped defaults scrypt's 128 MiB fills its grid and Argon2id's 64 MiB fills half of it); an interactive **RAM-wall** exhibit draws the attacker's fixed RAM pool and compute lanes and lets you drag Argon2id's memory parameter to watch idle cores get evicted in real time; and the per-guess-memory bar chart defaults to a **linear** scale (with a one-click switch to log) so the honest gap lands before it is compressed for legibility. Every ratio the captions quote is computed from the run on screen — at the shipped defaults it is ~130,000×, and it restates itself when you move a cost knob.
 
 ## Exhibits
 
 1. **On-page framing block** — a college-level intro defining KDFs and the compute-hard (PBKDF2) vs memory-hard (scrypt, Argon2id) tension, calling out HKDF as the deliberately-included *wrong tool*.
-2. **Four-KDF benchmark** — HKDF-SHA256, PBKDF2-SHA256, scrypt, and Argon2id derived in-browser from a shared salt at adjustable cost parameters, each verified against its RFC known-answer vector.
+2. **Four-KDF benchmark** — HKDF-SHA256, PBKDF2-SHA256, scrypt, and Argon2id derived in-browser from a shared salt at adjustable cost parameters, PBKDF2 and scrypt are pinned to their RFC known-answer vectors through the exact `src/bench.ts` wrappers the UI calls; HKDF and Argon2id, whose vectors need inputs the wrappers do not expose, are pinned at the primitive (see **Accessibility & Testing**).
 3. **Per-KDF mechanism schematics** — each result card carries a small annotated diagram of that KDF's inner loop: HKDF's two labelled *extract → expand* boxes (no cost knob), PBKDF2's single hash inside a repeat-counter loop, and scrypt/Argon2id's array of memory blocks written then re-read — turning "compute-hard = repeat a hash" vs "memory-hard = fill and revisit RAM" from prose into a picture.
-4. **Memory-fill grids, drawn to scale** — all four KDFs shown as same-size cell grids in one row on a *true linear* scale (each measured against the hungriest KDF in the run), so the compute-hard pair light one lonely cell directly beside the near-full memory-hard grids. The side-by-side emptiness-vs-fullness is the demo's clearest single view of memory-hardness.
+4. **Memory-fill grids, drawn to scale** — all four KDFs shown as same-size cell grids in one row on a *true linear* scale (each measured against the hungriest KDF in the run), so the compute-hard pair light one lonely cell directly beside the far fuller memory-hard grids. The caption under the row names the hungriest KDF and the exact ratio for that run, so lowering a cost parameter restates the gap rather than leaving a stale figure on screen. The side-by-side emptiness-vs-fullness is the demo's clearest single view of memory-hardness.
 5. **RAM-wall attacker rig** — a fixed pool of RAM and compute lanes drawn as a token board; guesses that fit are lit and the RAM-starved remainder go idle. A live slider on Argon2id's memory parameter evicts lanes in real time, so *why* adding cores stops helping once you are RAM-bound is watched, not asserted.
 6. **Dual charts with a linear/log toggle** — wall-clock *defender cost* beside *attacker's per-guess memory cost*; the memory chart defaults to **linear** (the honest ratio) with a one-click switch to **log** (legible but flattening), each explained in a caption, so a learner cannot mistake Argon2id for "just a slower PBKDF2".
 7. **Attacker-lens estimate** — a live, clearly-labelled order-of-magnitude guesses/sec figure per KDF plus its dominating bottleneck (compute vs memory), updating as the cost knobs change.
@@ -71,10 +71,19 @@ npm run dev
 **Crypto correctness.** `npm test` runs a [Vitest](https://vitest.dev) suite
 (`test/kdf.test.ts`) that recomputes the published RFC known-answer vectors —
 HKDF-SHA256 (RFC 5869), PBKDF2-HMAC-SHA256 (RFC 7914 §11), scrypt (RFC 7914
-§12), and Argon2id (RFC 9106 §5.3) — through the *same* functions the UI calls
-in `src/bench.ts`, plus determinism, parameter-liveness, and salt-uniqueness
-property tests. A regression that swapped an algorithm, dropped a parameter, or
-truncated an output would fail here rather than ship.
+§12), and Argon2id (RFC 9106 §5.3) — plus determinism, parameter-liveness, and
+salt-uniqueness property tests. A regression that swapped an algorithm, dropped
+a parameter, or truncated an output would fail here rather than ship.
+
+Two of those vectors run through the exact `src/bench.ts` wrappers the UI calls:
+`runPBKDF2` reproduces the RFC 7914 §11 vector and `runScrypt` the §12 one, so
+those code paths are verified end to end. The HKDF and Argon2id vectors cannot
+be: `runHKDF` pins its own `info` string, and `runArgon2id` exposes no secret
+key or associated data, both of which the published vectors require. Those two
+are pinned at the primitive, and the wrappers are separately asserted to agree
+byte-for-byte with a direct `@noble/hashes` call at the same parameters — so a
+swapped algorithm or dropped parameter still fails, just in two steps rather
+than one.
 
 KDF Arena is also built to a WCAG 2.1 AA standard and verified by an automated
 audit harness (`audit/run.mjs`) that drives the real page in Chromium:

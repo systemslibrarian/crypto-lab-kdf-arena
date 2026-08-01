@@ -31,6 +31,29 @@ function humanKB(memKB: number): string {
 }
 
 /**
+ * Format a ratio to two significant figures. Every ratio the captions quote is
+ * computed from the run that is on screen — the cost knobs are adjustable (and
+ * the "Weaken" presets invite the learner to move them), so a hardcoded figure
+ * would be describing a different run than the one being shown.
+ */
+function approxRatio(x: number): string {
+  if (!Number.isFinite(x) || x <= 0) return '1×';
+  if (x < 10) return `${x.toFixed(1)}×`;
+  const mag = 10 ** (Math.floor(Math.log10(x)) - 1);
+  return `${(Math.round(x / mag) * mag).toLocaleString()}×`;
+}
+
+/** Plain-English magnitude word for a ratio, derived rather than asserted. */
+function ratioWords(x: number): string {
+  if (x >= 1e6) return 'millions of times';
+  if (x >= 1e4) return 'tens of thousands of times';
+  if (x >= 1e3) return 'thousands of times';
+  if (x >= 1e2) return 'hundreds of times';
+  if (x >= 10) return 'tens of times';
+  return 'a few times';
+}
+
+/**
  * A LINEAR-scaled grid of memory cells that fills in proportion to the KDF's
  * nominal working set, measured against the largest KDF in the same run. This is
  * an HONEST visual: the fill fraction is the real ratio of `memoryNominalKB`
@@ -62,14 +85,30 @@ function memoryFillGrid(memKB: number, maxMemKB: number, kdf: string): string {
  * The four side-by-side memory grids, on one linear scale. This is the single
  * strongest way to make "memory-hard" visible: three near-dark grids next to
  * one near-full grid.
+ *
+ * The caption is generated from THIS run's numbers. It used to name a fixed
+ * "~64,000x" gap and assert that both memory-hard KDFs "fill most of" their
+ * grids — neither of which survives contact with the cost knobs. At the shipped
+ * defaults the widest gap is 131,072x (scrypt at 128 MiB, not Argon2id at
+ * 64 MiB, is the hungriest), and one click of the "Weaken: 8 MiB" preset leaves
+ * Argon2id lighting 9 of 144 cells while the old caption still said it filled
+ * most of the grid.
  */
 function memoryGridRow(results: BenchResult[]): string {
-  const maxMemKB = Math.max(...results.map((r) => Math.max(r.memoryNominalKB, 1)));
+  const mem = results.map((r) => Math.max(r.memoryNominalKB, 1));
+  const maxMemKB = Math.max(...mem);
+  const minMemKB = Math.min(...mem);
+  const hungriest = results[mem.indexOf(maxMemKB)];
   const grids = results.map((r) => memoryFillGrid(Math.max(r.memoryNominalKB, 1), maxMemKB, r.kdf)).join('');
+  // Who actually reads as "one lonely cell" is a property of the run, not a fixed list.
+  const lean = results.filter((r) => Math.max(r.memoryNominalKB, 1) / maxMemKB < 0.01).map((r) => r.kdf);
+  const leanClause = lean.length
+    ? ` ${escapeHtml(lean.join(' and '))} ${lean.length > 1 ? 'come' : 'comes'} in under 1% of that — one lonely lit cell each.`
+    : '';
   return `
     <section class="mem-showcase" aria-labelledby="mem-showcase-h">
       <h2 class="mem-showcase-h" id="mem-showcase-h">Per-guess memory, drawn to scale</h2>
-      <p class="mem-showcase-cap">Each grid is the same size and each grid is drawn to the <strong>same true linear scale</strong> (all four measured against the hungriest KDF in this run). A lit cell is a slice of the RAM one password guess must hold. The two compute-hard KDFs — HKDF and PBKDF2 — barely light a single cell; the two memory-hard ones — scrypt and Argon2id — fill most of theirs. <em>That</em> emptiness-vs-fullness, at the honest ~64,000&times; ratio a log axis would have hidden, is memory-hardness.</p>
+      <p class="mem-showcase-cap">Each grid is the same size and each grid is drawn to the <strong>same true linear scale</strong> — all four measured against <strong>${escapeHtml(hungriest.kdf)}</strong>, the hungriest KDF in this run at ${humanKB(maxMemKB)} per guess. A lit cell is 1/144 of that.${leanClause} The widest gap on screen is <strong>${approxRatio(maxMemKB / minMemKB)}</strong> (${humanKB(maxMemKB)} against ${humanKB(minMemKB)} per guess), drawn at that full ratio rather than compressed onto a log axis. Every figure here is computed from this run — move a cost knob and it moves with you.</p>
       <div class="mem-grid-row">${grids}</div>
     </section>`;
 }
@@ -122,10 +161,27 @@ export interface RenderMeta {
   salt: Uint8Array;
 }
 
+// The two scale captions. Both quote the spread between the hungriest and the
+// leanest KDF *in the run on screen*, so weakening a cost parameter restates the
+// gap instead of leaving a stale magnitude behind.
+function linScaleNote(ratioText: string): string {
+  return `Linear scale — the true ratio, bar for bar. In this run the hungriest KDF costs <strong>${ratioText}</strong> more RAM per guess than the leanest, and that is exactly the spread you are looking at. Switch to <strong>Log</strong> to compress the axis so the tiny bars become readable.`;
+}
+
+function logScaleNote(ratioText: string, words: string): string {
+  return `Log scale — the axis is compressed so the tiny bars become legible. Handy for reading small values, but it visually flattens the real ${words} (<strong>${ratioText}</strong>) gap you saw on the linear scale.`;
+}
+
 export function renderResults(results: BenchResult[], meta?: RenderMeta): string {
   const maxTime = Math.max(...results.map((r) => r.timeMs));
   const attacks = results.map((r) => estimateAttacker(r));
   const maxMemKB = Math.max(...results.map((r) => Math.max(r.memoryNominalKB, 1)));
+  const minMemKB = Math.min(...results.map((r) => Math.max(r.memoryNominalKB, 1)));
+  const memRatioText = approxRatio(maxMemKB / minMemKB);
+  const memRatioWords = ratioWords(maxMemKB / minMemKB);
+  // The attacker tooltip describes the rig; read it off the model so the two
+  // cannot drift apart.
+  const rigDesc = `${ATTACKER.parallelLanes.toLocaleString()}-lane, ${(ATTACKER.ramKB / (1024 * 1024)).toLocaleString()} GiB`;
 
   const cards = results
     .map((r, i) => {
@@ -144,7 +200,7 @@ export function renderResults(results: BenchResult[], meta?: RenderMeta): string
         <p class="params">${paramsStr}</p>
         ${kdfSchematic(r)}
         <p class="memory">Nominal memory: ~${r.memoryNominalKB.toLocaleString()} KB <span class="memory-caveat" title="Algorithm-defined working-set size, not measured RAM. HKDF/PBKDF2 are compute-bound, so their footprint is tiny and approximate.">(defined, not measured)</span></p>
-        <p class="attacker" title="Order-of-magnitude estimate from this run's time and the algorithm's defined memory cost, against one hypothetical 8192-lane, 8 GiB rig. Not a benchmark of any real GPU.">
+        <p class="attacker" title="Order-of-magnitude estimate from this run's time and the algorithm's defined memory cost, against one hypothetical ${rigDesc} rig. Not a benchmark of any real GPU.">
           <span class="attacker-label">Attacker: </span>
           <span class="attacker-rate">~${formatRate(atk.guessesPerSec)}</span> guesses/sec
           <span class="attacker-bound attacker-bound-${atk.boundedBy}">${boundLabel}</span>
@@ -220,7 +276,9 @@ export function renderResults(results: BenchResult[], meta?: RenderMeta): string
         <p class="chart-caption">How long one derivation takes on this machine. Longer is safer — but only up to what your users will tolerate.</p>
         ${timeBars}
       </div>
-      <div class="bar-chart" id="mem-chart" data-scale="linear">
+      <div class="bar-chart" id="mem-chart" data-scale="linear"
+           data-ratio="${escapeHtml(memRatioText)}"
+           data-ratio-words="${escapeHtml(memRatioWords)}">
         <div class="chart-head">
           <h2>Attacker's per-guess memory cost</h2>
           <div class="scale-toggle" role="group" aria-label="Memory chart scale">
@@ -228,7 +286,7 @@ export function renderResults(results: BenchResult[], meta?: RenderMeta): string
             <button type="button" class="scale-btn" data-scale-set="log" aria-pressed="false">Log</button>
           </div>
         </div>
-        <p class="chart-caption" id="mem-scale-note">Linear scale — the true ratio. The memory-hard bars dwarf PBKDF2/HKDF because they really do cost tens of thousands of times more RAM per guess. Switch to <strong>Log</strong> to compress the axis so the tiny bars become readable.</p>
+        <p class="chart-caption" id="mem-scale-note">${linScaleNote(memRatioText)}</p>
         ${memBars}
       </div>
     </div>`;
@@ -276,10 +334,12 @@ export function wireMemChartToggle(root: ParentNode = document): void {
   const chart = root.querySelector<HTMLElement>('#mem-chart');
   if (!chart) return;
   const note = chart.querySelector<HTMLElement>('#mem-scale-note');
-  const linText =
-    'Linear scale — the true ratio. The memory-hard bars dwarf PBKDF2/HKDF because they really do cost tens of thousands of times more RAM per guess. Switch to <strong>Log</strong> to compress the axis so the tiny bars become readable.';
-  const logText =
-    'Log scale — the axis is compressed so PBKDF2/HKDF’s tiny bars become legible. Handy for reading small values, but it visually flattens the real tens-of-thousands-fold gap you saw on the linear scale.';
+  // Both captions quote the spread renderResults measured for THIS run, carried
+  // across on the chart element, rather than a magnitude fixed at authoring time.
+  const ratioText = chart.dataset.ratio ?? '';
+  const ratioWordsText = chart.dataset.ratioWords ?? 'large';
+  const linText = linScaleNote(ratioText);
+  const logText = logScaleNote(ratioText, ratioWordsText);
   const apply = (scale: 'linear' | 'log'): void => {
     chart.setAttribute('data-scale', scale);
     chart.querySelectorAll<HTMLElement>('.bar-fill-mem').forEach((f) => {
