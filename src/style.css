@@ -4,6 +4,15 @@
   --text-h: #08060d;
   --bg: #fff;
   --border: #e5e4e7;
+  /* Control boundaries only (WCAG 2.1 SC 1.4.11). `.control-group input` is filled
+     with --code-bg (#f4f3ec), which is 1.06:1 against --bg and the literal same
+     colour as the --code-bg surface of `.params-advanced` that most of the number
+     fields sit inside — so the border is the only thing delineating the field.
+     --border is 1.10:1 on --bg and 1.03:1 on --code-bg. #817f86 is --border
+     darkened along its own faintly violet hue: 3.95:1 on --bg, 3.55:1 on
+     --code-bg. --border is left unchanged for decorative rules — panel and
+     fieldset outlines, table rules, the dashed separators. */
+  --border-strong: #817f86;
   --code-bg: #f4f3ec;
   /* Brand accent — used for decorative fills and focus outlines (graphical,
      needs only 3:1). */
@@ -48,6 +57,11 @@
   --text-h: #f3f4f6;
   --bg: #16171d;
   --border: #2e303a;
+  /* Dark-theme control boundary (WCAG 2.1 SC 1.4.11). Same story inverted: the
+     field fill is --code-bg (#1f2028), 1.09:1 on --bg and identical to the
+     --code-bg panel it sits in. --border is 1.27:1 on --code-bg. #74767e is
+     --border lightened along its own hue: 3.58:1 on --code-bg, 3.95:1 on --bg. */
+  --border-strong: #74767e;
   --code-bg: #1f2028;
   --accent: #c084fc;
   /* On dark surfaces the light accent already clears AA as text, so accent-fg
@@ -325,7 +339,7 @@ header {
   font-size: max(1rem, 16px);
   padding: 0.55rem 0.6rem;
   min-height: 44px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-strong);
   border-radius: 4px;
   background-color: var(--code-bg);
   color: var(--text-h);
