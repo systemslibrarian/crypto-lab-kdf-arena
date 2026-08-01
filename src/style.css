@@ -181,7 +181,6 @@ header {
   border-bottom: 1px solid var(--border);
 }
 
-/* BEGIN cl-hero standard — managed, keep in sync across fleet */
 .cl-hero{display:flex;align-items:flex-start;justify-content:space-between;gap:clamp(1rem,4vw,3rem);flex-wrap:wrap;margin:clamp(1rem,3vw,2rem) 0 1.5rem;}
 .cl-hero-main{flex:1 1 22rem;min-width:min(100%,20rem);}
 .cl-hero-title{margin:0;font-size:clamp(1.6rem,3.8vw,2.7rem);font-weight:700;line-height:1.1;letter-spacing:.01em;color:var(--text-h);}
@@ -190,8 +189,7 @@ header {
 .cl-hero-why{flex:0 1 min(40%,26rem);min-width:min(100%,15rem);border:1px solid var(--accent-border);border-radius:10px;padding:.85rem 1.05rem;background:var(--accent-bg);}
 .cl-hero-why-label{display:block;font-size:.68rem;font-weight:700;letter-spacing:.14em;color:var(--accent-fg);}
 .cl-hero-why-text{margin:.35rem 0 0;font-size:.95rem;line-height:1.5;color:var(--text-h);}
-@media (max-width:640px){.cl-hero{flex-direction:column;}.cl-hero-why{flex-basis:auto;width:100%;}}
-/* END cl-hero standard */
+@media (max-width:640px){.cl-hero{flex-direction:column;}.cl-hero-why{flex-basis:auto;width:100%;}.cl-hero-main{flex-basis:auto;min-width:0;}}
 
 .theme-toggle {
   position: absolute;
@@ -870,7 +868,8 @@ button.run-btn:focus-visible {
   font-size: 0.75rem;
   font-weight: 500;
   padding: 0.35rem 0.7rem;
-  min-height: 36px;
+  /* WCAG 2.5.5 target size (44x44 minimum). */
+  min-height: 44px;
   border: none;
   background-color: var(--bg);
   color: var(--text);
@@ -906,7 +905,8 @@ button.run-btn:focus-visible {
   font-size: 0.78rem;
   font-weight: 500;
   padding: 0.45rem 0.85rem;
-  min-height: 40px;
+  /* WCAG 2.5.5 target size (44x44 minimum). */
+  min-height: 44px;
   border: 1px solid var(--warn-border);
   border-radius: 6px;
   background-color: var(--warn-bg);
