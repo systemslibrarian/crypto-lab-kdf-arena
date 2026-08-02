@@ -210,6 +210,13 @@ describe('memory captions are computed from the run, not hardcoded', () => {
     const html = renderResults([card('PBKDF2-SHA256', 1)], meta);
     expect(html).toContain(`${ATTACKER.parallelLanes.toLocaleString()}-lane`);
   });
+
+  test('the rig reaches compute-bound values and controls the next benchmark', () => {
+    const html = renderResults([card('Argon2id', 65_536)], meta);
+    expect(html).toContain('id="rig-argon-mem" min="8"');
+    expect(html).toContain('Set Argon2id memory for the next benchmark');
+    expect(html).toContain('below 1 MiB to reach the compute-bound branch');
+  });
 });
 
 describe('runAll', () => {

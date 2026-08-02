@@ -91,7 +91,7 @@ async function screenReaderChecks(page) {
 
   await want('h1 "KDF Arena"', page.getByRole('heading', { level: 1, name: 'KDF Arena' }), 1);
   await want('h2 "Results"', page.getByRole('heading', { level: 2, name: 'Results' }), 1);
-  await want('h2 "Timing comparison"', page.getByRole('heading', { level: 2, name: 'Timing comparison' }), 1);
+  await want('h2 "Defender cost: wall-clock time"', page.getByRole('heading', { level: 2, name: 'Defender cost: wall-clock time' }), 1);
   await want('4 KDF h3 headings', page.getByRole('heading', { level: 3 }), 4);
   await want('Run button has accessible name', page.getByRole('button', { name: 'Run Benchmark' }), 1);
   // The shared crypto-lab topbar hides the lab's own toggle and provides its
@@ -100,8 +100,18 @@ async function screenReaderChecks(page) {
   await want('Password textbox is labelled', page.getByRole('textbox', { name: 'Password' }), 1);
   await want('Skip link is reachable', page.getByRole('link', { name: 'Skip to results' }), 1);
   await want('Results is a named region', page.getByRole('region', { name: 'Benchmark results' }), 1);
-  await want('4 timing meters exposed', page.getByRole('meter'), 4);
-  await want('Argon2id meter is named', page.getByRole('meter', { name: 'Argon2id' }), 1);
+  await want('8 timing and memory meters exposed', page.getByRole('meter'), 8);
+  await want('Argon2id timing meter is named', page.getByRole('meter', { name: 'Argon2id timing' }), 1);
+  await want('Argon2id memory meter is named', page.getByRole('meter', { name: 'Argon2id memory' }), 1);
+
+  // The rig control is not a decorative what-if slider: it must reach the
+  // compute-bound branch and update the parameter used by the next benchmark.
+  const rigMemory = page.locator('#rig-argon-mem');
+  await rigMemory.fill('512');
+  await rigMemory.dispatchEvent('input');
+  const syncedMemory = await page.locator('#argon2-memory').inputValue();
+  checks.push({ desc: 'Rig slider updates the live Argon2id benchmark input', ok: syncedMemory === '512', got: syncedMemory, want: '512' });
+  await want('Compute-bound rig branch is reachable', page.getByText(/^Compute-bound:/), 1);
 
   const failed = checks.filter((c) => !c.ok);
   summary.sr.push({ checks, failed: failed.length });

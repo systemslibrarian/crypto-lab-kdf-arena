@@ -219,7 +219,7 @@ export function renderResults(results: BenchResult[], meta?: RenderMeta): string
       return `
       <div class="bar-row">
         <span class="bar-label" id="${labelId}">${escapeHtml(r.kdf)}</span>
-        <div class="bar-track" role="meter" aria-valuenow="${r.timeMs.toFixed(1)}" aria-valuemin="0" aria-valuemax="${maxTime.toFixed(1)}" aria-valuetext="${valueText}" aria-labelledby="${labelId}"><div class="bar-fill" style="width: ${pct.toFixed(1)}%"></div></div>
+        <div class="bar-track" role="meter" aria-label="${escapeHtml(r.kdf)} timing" aria-valuenow="${r.timeMs.toFixed(1)}" aria-valuemin="0" aria-valuemax="${maxTime.toFixed(1)}" aria-valuetext="${valueText}"><div class="bar-fill" style="width: ${pct.toFixed(1)}%"></div></div>
         <span class="bar-value" aria-hidden="true">${r.timeMs.toFixed(1)} ms</span>
       </div>`;
     })
@@ -239,7 +239,7 @@ export function renderResults(results: BenchResult[], meta?: RenderMeta): string
       return `
       <div class="bar-row">
         <span class="bar-label" id="${labelId}">${escapeHtml(r.kdf)}</span>
-        <div class="bar-track" role="meter" aria-valuenow="${r.memoryNominalKB}" aria-valuemin="1" aria-valuemax="${Math.round(10 ** maxMemLog)}" aria-valuetext="${valueText}" aria-labelledby="${labelId}"><div class="bar-fill bar-fill-mem" data-lin="${linPct.toFixed(2)}" data-log="${logPct.toFixed(2)}" style="width: ${linPct.toFixed(2)}%"></div></div>
+        <div class="bar-track" role="meter" aria-label="${escapeHtml(r.kdf)} memory" aria-valuenow="${r.memoryNominalKB}" aria-valuemin="1" aria-valuemax="${Math.round(10 ** maxMemLog)}" aria-valuetext="${valueText}"><div class="bar-fill bar-fill-mem" data-lin="${linPct.toFixed(2)}" data-log="${logPct.toFixed(2)}" style="width: ${linPct.toFixed(2)}%"></div></div>
         <span class="bar-value" aria-hidden="true">${humanKB(memKB)}</span>
       </div>`;
     })
@@ -299,7 +299,8 @@ export function renderResults(results: BenchResult[], meta?: RenderMeta): string
  * Argon2id only a handful of guesses fit before the RAM bar is full and the
  * remaining cores sit idle. The Argon2id memory slider lets the learner watch
  * lanes get evicted in real time — turning the asserted "RAM-bound" label into an
- * observed mechanism.
+ * observed mechanism. It also updates the real benchmark control so the next
+ * run derives with the value explored here rather than leaving this cosmetic.
  */
 function attackerRig(results: BenchResult[]): string {
   const argon = results.find((r) => r.kdf.startsWith('Argon2id'));
@@ -311,9 +312,9 @@ function attackerRig(results: BenchResult[]): string {
       <div class="rig-lanes" id="rig-lanes" aria-hidden="true"></div>
       <p class="rig-status" id="rig-status" role="status" aria-live="polite"></p>
       <div class="rig-control">
-        <label for="rig-argon-mem">Drag Argon2id memory (KiB): <output id="rig-argon-out">${argonMem.toLocaleString()}</output></label>
-        <input type="range" id="rig-argon-mem" min="8192" max="1048576" step="8192" value="${Math.min(1048576, Math.max(8192, argonMem))}" />
-        <p class="rig-hint">Turn it down and watch guesses pack back in; turn it up and watch lanes get evicted until only a few fit. That eviction — not raw speed — is what makes Argon2id expensive to attack.</p>
+        <label for="rig-argon-mem">Set Argon2id memory for the next benchmark (KiB): <output id="rig-argon-out">${argonMem.toLocaleString()}</output></label>
+        <input type="range" id="rig-argon-mem" min="8" max="1048576" step="8" value="${Math.min(1048576, Math.max(8, argonMem))}" />
+        <p class="rig-hint">Turn it below 1 MiB to reach the compute-bound branch; turn it up and watch lanes get evicted. This also updates the benchmark input — re-run to measure the selected value.</p>
       </div>
     </section>`;
 }
@@ -369,6 +370,7 @@ export function wireAttackerRig(root: ParentNode = document): void {
   const status = root.querySelector<HTMLElement>('#rig-status');
   const slider = root.querySelector<HTMLInputElement>('#rig-argon-mem');
   const out = root.querySelector<HTMLOutputElement>('#rig-argon-out');
+  const benchmarkMemory = document.querySelector<HTMLInputElement>('#argon2-memory');
   if (!lanes || !status || !slider || !out) return;
 
   // Visual model, faithful to the real attacker math in bench.ts: a rig with
@@ -409,6 +411,10 @@ export function wireAttackerRig(root: ParentNode = document): void {
     return `${memKB} KB`;
   }
 
-  slider.addEventListener('input', () => update(Number(slider.value)));
+  slider.addEventListener('input', () => {
+    const selected = Number(slider.value);
+    if (benchmarkMemory) benchmarkMemory.value = String(selected);
+    update(selected);
+  });
   update(Number(slider.value));
 }
