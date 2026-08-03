@@ -21,7 +21,7 @@ import * as chromeLauncher from 'chrome-launcher';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const SHOTS = join(HERE, 'screenshots');
-const PORT = 4173;
+const PORT = 4704;
 const URL = `http://localhost:${PORT}/`;
 const WCAG = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'best-practice'];
 
