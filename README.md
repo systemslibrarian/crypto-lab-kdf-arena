@@ -85,6 +85,18 @@ byte-for-byte with a direct `@noble/hashes` call at the same parameters — so a
 swapped algorithm or dropped parameter still fails, just in two steps rather
 than one.
 
+**Page claims.** `e2e/claims.spec.ts` drives the real page in Chromium and
+asserts the load-bearing states rather than merely that they render: every
+card's nominal memory recomputed from the parameters that card prints, every
+attacker guesses/sec figure recomputed from that card's own time and memory,
+the timing bars against the times on the cards, the memory grids and both chart
+scales against the true linear/log ratios, the RAM-wall rig's working and idle
+lanes summing to the rig's cores, and each failure or tamper path — invalid
+scrypt `N`, empty password, blank cost field, salt reuse, both **Weaken**
+presets — driven to its end state and checked to also say *why*. Timings are
+asserted as orderings and ratios, never absolute thresholds, so the suite is not
+machine-dependent.
+
 KDF Arena is also built to a WCAG 2.1 AA standard and verified by an automated
 audit harness (`audit/run.mjs`) that drives the real page in Chromium:
 
@@ -104,8 +116,9 @@ benchmark), an `aria-live` results region with `aria-busy`, 44px touch targets, 
 ```sh
 npm install
 npm test                          # RFC known-answer + property tests (Vitest)
-npx playwright install chromium   # one-time, for the a11y gate / audit
-npm run test:a11y                 # WCAG A/AA gate (axe-core, both themes)
+npx playwright install chromium   # one-time, for the browser gates / audit
+npm run test:e2e                  # claims + WCAG A/AA gates (the CI gate)
+npm run test:a11y                 # WCAG A/AA gate alone (axe-core, both themes)
 npm run audit                     # build + axe + Lighthouse + SR-tree checks
 ```
 
