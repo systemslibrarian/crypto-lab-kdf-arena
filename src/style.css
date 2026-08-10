@@ -4,14 +4,23 @@
   --text-h: #08060d;
   --bg: #fff;
   --border: #e5e4e7;
-  /* Control boundaries only (WCAG 2.1 SC 1.4.11). `.control-group input` is filled
-     with --code-bg (#f4f3ec), which is 1.06:1 against --bg and the literal same
-     colour as the --code-bg surface of `.params-advanced` that most of the number
-     fields sit inside — so the border is the only thing delineating the field.
-     --border is 1.10:1 on --bg and 1.03:1 on --code-bg. #817f86 is --border
-     darkened along its own faintly violet hue: 3.95:1 on --bg, 3.55:1 on
-     --code-bg. --border is left unchanged for decorative rules — panel and
-     fieldset outlines, table rules, the dashed separators. */
+  /* Boundaries a WCAG 2.1 SC 1.4.11 requirement lands on: 3:1 against the
+     surface behind them. #817f86 is --border darkened along its own faintly
+     violet hue: 3.95:1 on --bg, 3.55:1 on --code-bg. --border stays as it is,
+     for genuinely decorative rules — panel and fieldset outlines, the result
+     cards, the dashed schematic frames, the footer rule.
+
+     This token was introduced for `.control-group input`, and for a while that
+     was the only rule using it — one rule against --border's 21. Everything
+     else that OWES 3:1 was still on the decorative hairline, and was measured
+     failing on the running page: the `role="meter"` timing/memory bar tracks at
+     1.11:1 (light) / 1.10:1 (dark), so only the lit part of a bar was visible
+     and the scale it is measured against was not; the memory grids and the
+     attacker-rig lane board at 1.14:1 / 1.24:1, so the board's extent — the
+     denominator of "how much of the RAM does one guess cost" — did not render;
+     and the linear/log scale toggle at 1.27:1 / 1.36:1 with an inactive button
+     filled in exactly the page background, so half the control was invisible.
+     A boundary token is only worth what it is APPLIED to. */
   --border-strong: #817f86;
   --code-bg: #f4f3ec;
   /* Brand accent — used for decorative fills and focus outlines (graphical,
@@ -57,10 +66,8 @@
   --text-h: #f3f4f6;
   --bg: #16171d;
   --border: #2e303a;
-  /* Dark-theme control boundary (WCAG 2.1 SC 1.4.11). Same story inverted: the
-     field fill is --code-bg (#1f2028), 1.09:1 on --bg and identical to the
-     --code-bg panel it sits in. --border is 1.27:1 on --code-bg. #74767e is
-     --border lightened along its own hue: 3.58:1 on --code-bg, 3.95:1 on --bg. */
+  /* Same token, inverted: #74767e is --border lightened along its own hue,
+     3.58:1 on --code-bg and 3.95:1 on --bg. */
   --border-strong: #74767e;
   --code-bg: #1f2028;
   --accent: #c084fc;
@@ -568,12 +575,19 @@ button.run-btn:focus-visible {
   gap: 0.4rem;
 }
 
+/* "Per-guess memory, drawn to scale": the reading is filled cells OVER the
+   whole board, so the board's extent has to be perceivable or the fraction has
+   no denominator. At --border the frame measured 1.14:1 (light) / 1.24:1
+   (dark) against the showcase panel. The frame is what carries it — the empty
+   CELLS deliberately stay faint, because making them --border-strong would put
+   them within 1.11:1 of the filled cells and destroy the distinction the
+   figure exists for. */
 .mem-grid {
   display: grid;
   grid-template-columns: repeat(12, 1fr);
   gap: 2px;
   padding: 4px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-strong);
   border-radius: 6px;
   background-color: var(--bg);
 }
@@ -656,7 +670,10 @@ button.run-btn:focus-visible {
   align-items: center;
   gap: 0.1rem;
   padding: 0.4rem 0.3rem;
-  border: 1px solid var(--accent-border);
+  /* Opaque, for the same border-box reason as .preset-btn: over its own
+     --accent-bg fill the translucent --accent-border painted #cf93ff, 2.27:1
+     against the schematic panel. These boxes are the diagram. */
+  border: 1px solid var(--accent-fg);
   border-radius: 5px;
   background-color: var(--accent-bg);
   font-size: 0.78rem;
@@ -762,12 +779,16 @@ button.run-btn:focus-visible {
   font-style: italic;
 }
 
+/* Same reasoning as .mem-grid: the lit fraction of the board is the message,
+   so the board needs an edge. (This element is aria-hidden because #rig-status
+   narrates it in text — which also means BOTH automated oracles skip it, so it
+   is measured by hand or not at all.) */
 .rig-lanes {
   display: grid;
   grid-template-columns: repeat(24, 1fr);
   gap: 3px;
   padding: 6px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-strong);
   border-radius: 6px;
   background-color: var(--bg);
 }
@@ -835,11 +856,59 @@ button.run-btn:focus-visible {
   font-weight: 600;
 }
 
+/* The Argon2id memory slider, styled rather than left to the UA.
+ *
+ * `accent-color` alone got the THUMB right — it paints in --accent-fg, 5.43:1
+ * (light) / 6.13:1 (dark) against the rig panel — but left the TRACK to
+ * Chromium's own greys, which measured 1.03:1 with a 1.91:1 edge against
+ * --code-bg in light theme. The thumb tells you the value; the track is what
+ * makes the thing recognisable as a slider and shows the range the value sits
+ * in, so it owes 1.4.11 its 3:1 too. `accent-color` is kept for browsers that
+ * ignore the pseudo-elements below.
+ */
 .rig-control input[type='range'] {
   width: 100%;
   max-width: 30rem;
   accent-color: var(--accent-fg);
   min-height: 44px;
+  -webkit-appearance: none;
+  appearance: none;
+  background-color: transparent;
+  cursor: pointer;
+}
+
+.rig-control input[type='range']::-webkit-slider-runnable-track {
+  height: 8px;
+  border-radius: 999px;
+  background-color: var(--bg);
+  border: 1px solid var(--border-strong);
+}
+
+.rig-control input[type='range']::-moz-range-track {
+  height: 8px;
+  border-radius: 999px;
+  background-color: var(--bg);
+  border: 1px solid var(--border-strong);
+}
+
+/* 20px thumb centred on a 10px track box: (10 - 20) / 2 = -5px. */
+.rig-control input[type='range']::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  margin-top: -5px;
+  border-radius: 50%;
+  border: 2px solid var(--code-bg);
+  background-color: var(--accent-fg);
+}
+
+.rig-control input[type='range']::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid var(--code-bg);
+  background-color: var(--accent-fg);
 }
 
 .rig-control input[type='range']:focus-visible {
@@ -869,9 +938,12 @@ button.run-btn:focus-visible {
   margin-bottom: 0;
 }
 
+/* Two buttons in a group where only the ACTIVE one is filled. The inactive one
+   is --bg on --bg — the literal page background — so this border was the only
+   thing making it a control at all, and it measured 1.27:1 / 1.36:1. */
 .scale-toggle {
   display: inline-flex;
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-strong);
   border-radius: 6px;
   overflow: hidden;
   flex-shrink: 0;
@@ -891,7 +963,7 @@ button.run-btn:focus-visible {
 }
 
 .scale-btn + .scale-btn {
-  border-left: 1px solid var(--border);
+  border-left: 1px solid var(--border-strong);
 }
 
 .scale-btn.is-active {
@@ -921,7 +993,15 @@ button.run-btn:focus-visible {
   padding: 0.45rem 0.85rem;
   /* WCAG 2.5.5 target size (44x44 minimum). */
   min-height: 44px;
-  border: 1px solid var(--warn-border);
+  /* An OPAQUE border, deliberately. --warn-border is rgba(180,83,9,.45), and
+     `background-clip` defaults to `border-box`, so a translucent border
+     composites over the element's OWN --warn-bg fill rather than over the panel
+     behind it. The colour that actually reached the screen was #d3a27a — 2.05:1
+     against the cost panel in light theme, not the ~4:1 the raw hue suggests —
+     while the fill sat at 1.13:1, so the button had no perceivable edge. The
+     :hover rule below was already correct; it was the RESTING state that
+     failed. */
+  border: 1px solid var(--warn-fg);
   border-radius: 6px;
   background-color: var(--warn-bg);
   color: var(--warn-fg);
@@ -933,9 +1013,12 @@ button.run-btn:focus-visible {
   border-color: var(--warn-fg);
 }
 
+/* The pressed state must not REMOVE the boundary the resting state has. With
+   --accent-border (also translucent) it painted #ce96c1, 2.16:1 — so pressing
+   the button made its edge worse, not different. */
 .preset-btn.is-weak {
   background-color: var(--accent-bg);
-  border-color: var(--accent-border);
+  border-color: var(--accent-fg);
   color: var(--accent-fg);
 }
 
@@ -1136,10 +1219,15 @@ button.run-btn:focus-visible {
   }
 }
 
+/* role="meter". The fill is high-contrast, but the TRACK is the scale the fill
+   is read against, and --code-bg on the chart's --bg is 1.11:1 (light) /
+   1.10:1 (dark) with no border at all — so a short bar had nothing to be short
+   OF. 1.4.11 applies to the whole component, not just the lit part. */
 .bar-track {
   flex: 1;
   height: 1.75rem;
   background-color: var(--code-bg);
+  border: 1px solid var(--border-strong);
   border-radius: 4px;
   overflow: hidden;
   position: relative;

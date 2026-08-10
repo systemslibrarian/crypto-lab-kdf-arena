@@ -229,6 +229,27 @@ function setupBenchmark(): void {
       return;
     }
 
+    // RFC 9106 couples Argon2id's two cost knobs: m must be at least 8*p. The
+    // memory field advertises `min="8"`, which is only true at p=1, so the
+    // shipped p=4 makes every value below 32 a run that cannot happen. Left to
+    // the library, that surfaced as `"m" (memory) must be at least 8*p bytes` —
+    // a message that names neither field, quotes the wrong unit (this KDF's m
+    // is in KiB, not bytes), and offers no correction. WCAG 3.3.1 asks for the
+    // item in error to be identified and 3.3.3 for a suggestion when one is
+    // known; both are known here, so say them.
+    const check = readOptions();
+    const minMemory = 8 * check.argon2Parallelism!;
+    if (check.argon2Memory! < minMemory) {
+      resultsDiv.innerHTML =
+        `<div class="status status-error" role="alert">Argon2id memory is ` +
+        `${check.argon2Memory!.toLocaleString()} KiB, but with ${check.argon2Parallelism} ` +
+        `lanes of parallelism it must be at least ${minMemory.toLocaleString()} KiB ` +
+        `(RFC 9106 requires m &ge; 8&times;p). Raise <strong>Memory (KiB)</strong> to ` +
+        `${minMemory.toLocaleString()} or more, or lower <strong>Parallelism (lanes)</strong>.</div>`;
+      (document.getElementById('argon2-memory') as HTMLInputElement | null)?.focus();
+      return;
+    }
+
     runBtn.disabled = true;
     resultsDiv.setAttribute('aria-busy', 'true');
     resultsDiv.innerHTML = renderRunning();

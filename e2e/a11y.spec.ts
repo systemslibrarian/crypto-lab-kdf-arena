@@ -1,65 +1,35 @@
-import AxeBuilder from '@axe-core/playwright';
-import { expect, test, type Page } from '@playwright/test';
+import { test } from '@playwright/test';
+import { boot, driveAllStates, NARROW, reportCollected } from './gate';
 
 /**
- * WCAG regression gate. Deploys are gated on accessibility the same way they
- * are on correctness: axe-core scans the full page — placeholder state and the
- * rendered benchmark results — in both themes, with every collapsible expanded.
+ * WCAG A/AA regression gate. Deploys are already gated on the KDF correctness
+ * claims in `claims.spec.ts`; this gates them on accessibility the same way.
+ *
+ * Four configurations — {dark, light} x {1280, 380} — because a single-theme,
+ * single-viewport scan covers one quarter of what ships, and which quarter
+ * depends on defaults nobody asserted. Each configuration opens both
+ * disclosures, presses both "Weaken" presets, benchmarks at minimum and at
+ * shipped cost, toggles the memory chart's log scale, drives the attacker rig
+ * to both ends of its range, and walks both salt branches — scanning after
+ * every step. See `gate.ts` for why nothing is injected into the page, why each
+ * scan asserts its content first, and why `violations` is not the whole oracle.
  */
 
-const TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'];
+for (const theme of ['dark', 'light'] as const) {
+  test(`no WCAG A/AA violations in ${theme} theme`, async ({ page }) => {
+    test.setTimeout(900_000);
+    page.setDefaultTimeout(20_000);
+    await boot(page, theme);
+    await driveAllStates(page, theme);
+    reportCollected();
+  });
 
-async function killMotion(page: Page): Promise<void> {
-  await page.addStyleTag({
-    content: `*,*::before,*::after{transition:none!important;animation:none!important;scroll-behavior:auto!important}`,
+  test(`no WCAG A/AA violations in ${theme} theme at 380px`, async ({ page }) => {
+    test.setTimeout(900_000);
+    page.setDefaultTimeout(20_000);
+    await page.setViewportSize(NARROW);
+    await boot(page, theme);
+    await driveAllStates(page, `${theme} @380px`);
+    reportCollected();
   });
 }
-
-async function openAllDetails(page: Page): Promise<void> {
-  await page.evaluate(() => {
-    for (const details of document.querySelectorAll('details')) {
-      details.open = true;
-    }
-  });
-}
-
-async function runBenchmark(page: Page): Promise<void> {
-  // Drive the demo so the results region (cards + timing bars) is populated
-  // and gets scanned, not just the empty placeholder.
-  await page.locator('#run-btn').click();
-  await expect(page.locator('.result-cards')).toBeVisible({ timeout: 60_000 });
-  await expect(page.locator('#results')).toHaveAttribute('aria-busy', 'false');
-}
-
-async function scan(page: Page): Promise<void> {
-  const results = await new AxeBuilder({ page }).withTags(TAGS).analyze();
-  const summary = results.violations.map((v) => ({
-    id: v.id,
-    impact: v.impact,
-    help: v.help,
-    nodes: v.nodes.map((n) => n.target.join(' ')).slice(0, 5),
-  }));
-  expect(summary).toEqual([]);
-}
-
-test('no WCAG A/AA violations in dark theme', async ({ page }) => {
-  await page.goto('.');
-  await killMotion(page);
-  await openAllDetails(page);
-  await scan(page);
-  await runBenchmark(page);
-  await openAllDetails(page);
-  await scan(page);
-});
-
-test('no WCAG A/AA violations in light theme', async ({ page }) => {
-  await page.goto('.');
-  await killMotion(page);
-  await page.locator('#cl-theme-toggle').click();
-  await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
-  await openAllDetails(page);
-  await scan(page);
-  await runBenchmark(page);
-  await openAllDetails(page);
-  await scan(page);
-});
