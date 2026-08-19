@@ -25,9 +25,6 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
       <span class="cl-hero-why-label">WHY IT MATTERS</span>
       <p class="cl-hero-why-text">Every stolen password database is only as safe as the KDF behind it. Compute-hard PBKDF2 falls to cheap GPU farms; memory-hard scrypt and Argon2id make each guess cost real RAM. HKDF is the wrong tool — it expands strong keys, it can't slow a guesser.</p>
     </aside>
-    <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch to light mode">
-      <span class="theme-toggle-icon" aria-hidden="true">&#127769;</span>
-    </button>
   </header>
   <section class="intro" aria-label="What this demo teaches">
     <p class="intro-lead">
@@ -168,25 +165,6 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
 </footer>
 `;
 
-function setupThemeToggle(): void {
-  const btn = document.getElementById('theme-toggle')!;
-  const icon = btn.querySelector('.theme-toggle-icon')!;
-  function sync(): void {
-    const current = document.documentElement.getAttribute('data-theme') ?? 'dark';
-    const isDark = current === 'dark';
-    icon.textContent = isDark ? '\u{1F319}' : '\u{2600}\u{FE0F}';
-    btn.setAttribute('aria-label', isDark ? 'Switch to light mode' : 'Switch to dark mode');
-  }
-  btn.addEventListener('click', () => {
-    const current = document.documentElement.getAttribute('data-theme') ?? 'dark';
-    const next = current === 'dark' ? 'light' : 'dark';
-    document.documentElement.setAttribute('data-theme', next);
-    localStorage.setItem('theme', next);
-    sync();
-  });
-  sync();
-}
-
 function setupBenchmark(): void {
   const form = document.getElementById('bench-form') as HTMLFormElement;
   const runBtn = document.getElementById('run-btn') as HTMLButtonElement;
@@ -301,6 +279,5 @@ function setupPresets(): void {
   });
 }
 
-setupThemeToggle();
 setupBenchmark();
 setupPresets();

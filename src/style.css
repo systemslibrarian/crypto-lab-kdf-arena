@@ -212,35 +212,6 @@ header {
 .cl-hero-why-text{margin:.35rem 0 0;font-size:.95rem;line-height:1.5;color:var(--text-h);}
 @media (max-width:640px){.cl-hero{flex-direction:column;}.cl-hero-why{flex-basis:auto;width:100%;}.cl-hero-main{flex-basis:auto;min-width:0;}}
 
-.theme-toggle {
-  position: absolute;
-  top: 1.2rem;
-  right: 0;
-  width: 2.75rem;
-  height: 2.75rem;
-  border-radius: 50%;
-  border: 1px solid var(--border);
-  background-color: var(--bg);
-  color: var(--text-h);
-  font-size: 1.25rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: border-color 0.2s;
-  padding: 0;
-  line-height: 1;
-}
-
-.theme-toggle:hover {
-  border-color: var(--accent-border);
-}
-
-.theme-toggle:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
-
 /* ── Intro / framing block ── */
 .intro {
   padding: 1.25rem 0 0.25rem;
