@@ -47,7 +47,7 @@ Enter any password string and click **Run Benchmark** to derive 32-byte keys wit
 - **Argon2id** — winner of the Password Hashing Competition (2015), the default password hash in the libsodium `crypto_pwhash` API, and a selectable KDF in Bitwarden.
 - **scrypt** — used by Tarsnap for key derivation and by Litecoin's proof-of-work algorithm; recommended in RFC 7914.
 - **PBKDF2** — used for Wi-Fi key derivation in WPA2 (PBKDF2-HMAC-SHA1, 4096 iterations), in LUKS disk encryption, and specified in NIST SP 800-132.
-- **HKDF-SHA256** — used by TLS 1.3 (RFC 8446) for deriving traffic keys from the handshake secret, and by the Signal Protocol for ratchet key derivation.
+- **HKDF-SHA256** — used by TLS 1.3 (RFC 9846) for deriving traffic keys from the handshake secret, and by the Signal Protocol for ratchet key derivation.
 
 ## How to Run Locally
 
