@@ -35,18 +35,19 @@ export interface BenchResult {
  * defined memory cost — into a single figure a newcomer can reason about:
  * how many password guesses per second one attacker box can make.
  *
- * Two ceilings bound a real cracking rig, and the attacker gets the LOWER of them:
+ * Two ceilings bound this illustrative full-evaluation model; use the LOWER:
  *   • compute ceiling  — a rig runs many derivations in parallel; each still
  *     takes ~`timeMs`, so rate ≈ (parallel lanes) / time.
- *   • memory ceiling   — a memory-hard KDF forces each in-flight guess to hold
- *     its whole working set in RAM, so a rig with fixed RAM can only run
+ *   • memory ceiling   — the model assigns each in-flight guess the nominal
+ *     working set in RAM, so a rig with fixed RAM can only run
  *     (rig RAM) / (per-guess RAM) guesses at once. This is the term that makes
  *     Argon2id/scrypt expensive and PBKDF2/HKDF cheap, which is the whole point.
  *
  * The reference numbers below are a single, clearly-stated hypothetical rig,
- * not a claim about any specific GPU. Changing a cost knob moves the estimate
- * by the same *ratio* a real attacker would see, which is the intuition we want
- * to teach; the absolute magnitude is explicitly framed as "order-of-magnitude".
+ * not a claim about any specific GPU. A cost knob moves this model's estimate;
+ * actual attack ratios can differ. Time-memory trade-offs, hardware effects,
+ * preprocessing and leaks in the complete stored record are not modeled.
+ * The estimate is not a universal attack-cost lower bound.
  */
 export const ATTACKER = {
   // A hypothetical rig: massively parallel, but with finite fast memory.

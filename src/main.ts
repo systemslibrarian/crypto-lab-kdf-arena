@@ -1,5 +1,6 @@
 import './style.css';
 import { runAll, type RunOptions } from './bench.ts';
+import { renderRecordWorkshop, wireRecordWorkshop } from './record-design-ui.ts';
 import {
   renderResults,
   renderPlaceholder,
@@ -23,7 +24,7 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
     </div>
     <aside class="cl-hero-why" aria-label="Why it matters">
       <span class="cl-hero-why-label">WHY IT MATTERS</span>
-      <p class="cl-hero-why-text">Every stolen password database is only as safe as the KDF behind it. Compute-hard PBKDF2 falls to cheap GPU farms; memory-hard scrypt and Argon2id make each guess cost real RAM. HKDF is the wrong tool — it expands strong keys, it can't slow a guesser.</p>
+      <p class="cl-hero-why-text">Password storage needs both a suitable KDF and a sound record design. Memory-hard scrypt and Argon2id make full evaluations costly, but a leaked password or cheap hash can let an attacker bypass that work. HKDF has no password slow-down knob.</p>
     </aside>
   </header>
   <section class="intro" aria-label="What this demo teaches">
@@ -38,14 +39,17 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
       <strong>PBKDF2</strong> is <dfn>compute-hard</dfn> — it just repeats a hash
       hundreds of thousands of times, which a GPU parallelises cheaply.
       <strong>scrypt</strong> and <strong>Argon2id</strong> are
-      <dfn>memory-hard</dfn> — each guess must fill a large block of RAM, and RAM
-      is the one thing an attacker's thousands of parallel cores cannot share.
+      <dfn>memory-hard</dfn> — full evaluations fill and revisit a large block of RAM,
+      making parallel evaluation costly. The rig below models that full working set;
+      it does not model time–memory trade-offs or shortcuts exposed by a stored record.
       <strong>HKDF</strong> is the odd one out: it is deliberately included as the
       <em>wrong tool</em>. It is fast by design because it expands
       <em>already-strong</em> key material and was never meant to slow down a
       password guesser — watch it finish in microseconds and offer zero
       resistance.
     </p>
+    <p>Then <a href="#record-design">compare three stored record designs</a> to see
+      why expensive creation alone does not guarantee costly password recovery.</p>
     <details class="glossary" id="glossary">
       <summary>Jargon glossary — tap any term</summary>
       <dl class="glossary-list">
@@ -59,9 +63,9 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
           CPU per guess, for defender and attacker alike. The only lever PBKDF2
           has.</dd>
         <dt>memory-hardness</dt>
-        <dd>A guess is forced to allocate and touch a large working set of memory.
-          Attackers who scale by adding compute cores hit a RAM wall instead — the
-          defining property of scrypt and Argon2id.</dd>
+        <dd>Evaluation requires substantial memory work. Using less memory can incur
+          extra computation; the trade-off depends on the construction and attack model.
+          The rig models full evaluations with their nominal working set, not every attack.</dd>
         <dt>lanes / parallelism (p)</dt>
         <dd>How many independent threads an Argon2id/scrypt computation splits
           into. Tunes how the memory-hard work maps onto multi-core hardware.</dd>
@@ -151,6 +155,7 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
   </form>
   <section class="results" id="results" aria-live="polite" aria-busy="false"
            tabindex="-1" aria-label="Benchmark results">${renderPlaceholder()}</section>
+  ${renderRecordWorkshop()}
 </main>
 <footer>
   Part of <a href="https://systemslibrarian.github.io/crypto-lab/" rel="noopener">crypto-lab</a> ·
@@ -281,3 +286,4 @@ function setupPresets(): void {
 
 setupBenchmark();
 setupPresets();
+wireRecordWorkshop();
