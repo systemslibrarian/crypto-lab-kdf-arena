@@ -20,6 +20,25 @@ The live page opens with a plain-language framing of *what a KDF is* and *the co
 8. **One-click "weaken it" presets** — a guided toggle per password KDF (PBKDF2 → 1,000 iterations; Argon2id → 8 MiB) alongside the manual number fields, so newcomers who don't know good parameter ranges can flip a strong default to a deliberately weak one and re-run to see the attacker's guesses/sec jump.
 9. **Salt-uniqueness lesson** — an on-page callout explaining why the derived key changes each run, with a *Reuse salt across runs* toggle that reproduces identical keys to demonstrate the rainbow-table failure mode.
 10. **Jargon glossary** — collapsible in-page definitions for extract-and-expand, iterations/compute-hardness, memory-hardness, lanes/parallelism, and KiB.
+11. **Whole-record recovery exercise** — compare `F(p)`, the deliberately leaking `F(p) || p`, and `F(p) || H(p)` using six fixed synthetic strings. All three records really compute scrypt at creation. Recovery of the leaking records reads the password or tests cheap SHA-256 values without calling scrypt. Exact operation counts and expandable traces expose the difference between expensive creation and password protection.
+
+## Expensive Computation and the Complete Record
+
+Open the [record-design exercise](https://systemslibrarian.github.io/crypto-lab-kdf-arena/#record-design), choose a synthetic string, and click **Compare record designs**. The selection is separate from the benchmark password field; there is no free-form input or uploaded dictionary in this exercise.
+
+Here `F` is the existing scrypt wrapper with fixed `N=1024, r=8, p=1`, a 32-byte output, and public demo salt `kdf-record-demo!`. Its nominal main working set is 1 MiB. `H` is SHA-256 of the UTF-8 password. These small costs and the shared demo salt keep the comparison bounded and reproducible; they are not production settings. At most nine scrypt calls run per comparison: three independent record creations and up to six dictionary guesses for the `F(p)` record.
+
+| Stored record | Creation | Displayed recovery strategy |
+| --- | --- | --- |
+| `F(p)` | One real scrypt call | Evaluate scrypt for each dictionary candidate until its full digest matches. |
+| `F(p) || p` | One real scrypt call | Read the appended password; no candidate comparisons or scrypt calls. |
+| `F(p) || H(p)` | One real scrypt call and one SHA-256 call | Compare candidate SHA-256 values; no scrypt calls or expensive verification. |
+
+The table counts calls actually executed, candidate comparisons and direct reads. `H` counts standalone SHA-256 calls, excluding hashes internal to scrypt. The six candidates have distinct SHA-256 values, so a matching cheap digest identifies the selected entry within this dictionary. The UI clears old results when the selection changes. It makes no wall-clock attack-rate claim.
+
+The exercise illustrates the distinction motivating Charles Dodd, Pooya Farshim, Siamak F. Shahandashti and Karl Southern, **Multi-Instance Unrecoverability of iMHF-Based Password Hashing** ([University of York research record](https://pure.york.ac.uk/portal/en/publications/multi-instance-unrecoverability-of-imhf-based-password-hashing/), [ePrint 2026/018](https://eprint.iacr.org/2026/018); recommendation CL2864): evaluation hardness alone does not establish password unrecoverability when a construction leaks information about its input. These are invented counterexamples, not attacks on standard scrypt or Argon2 password storage. This is a single-record teaching exercise, not an implementation or independent validation of the paper's multi-instance bounds.
+
+The arena's RAM-wall estimate assumes full evaluations with the nominal working set. It does not cover time–memory trade-offs, preprocessing, hardware-specific attacks or shortcuts exposed by the complete record; it is not a lower bound on every attack. Those limits apply even when a derivation is genuinely expensive on the current browser.
 
 ## When to Use It
 
@@ -74,6 +93,14 @@ HKDF-SHA256 (RFC 5869), PBKDF2-HMAC-SHA256 (RFC 7914 §11), scrypt (RFC 7914
 §12), and Argon2id (RFC 9106 §5.3) — plus determinism, parameter-liveness, and
 salt-uniqueness property tests. A regression that swapped an algorithm, dropped
 a parameter, or truncated an output would fail here rather than ship.
+
+`test/record-design.test.ts` independently checks the exercise's scrypt and
+SHA-256 fields, exact creation/recovery operation counts, first/middle/last
+dictionary matches, early stopping, no-match exhaustion and bounded selection.
+It also corrupts the expensive field to prove that the two leaking designs
+really bypass it. `e2e/record-design.spec.ts` checks the displayed counts,
+independence from the benchmark input, selection changes, expanded recovery
+traces and narrow-screen accessibility in both themes.
 
 Two of those vectors run through the exact `src/bench.ts` wrappers the UI calls:
 `runPBKDF2` reproduces the RFC 7914 §11 vector and `runScrypt` the §12 one, so

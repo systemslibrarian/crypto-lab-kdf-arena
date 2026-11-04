@@ -580,4 +580,14 @@ export async function driveAllStates(page: Page, theme: string): Promise<void> {
   await expect(page.locator('#results')).toHaveAttribute('aria-busy', 'false');
   await scan(page, `${theme} / empty password refused`);
   await page.locator('#password-input').fill('correct horse battery staple');
+
+  // The independent record-design exercise adds a count table and three
+  // expandable traces. Scan their actual rendered state, including the
+  // horizontally scrollable table on the narrow viewport.
+  await page.locator('#record-run').click();
+  await expect(page.locator('#record-results')).toHaveAttribute('aria-busy', 'false');
+  await expect(page.locator('.record-table tbody tr')).toHaveCount(3);
+  for (const summary of await page.locator('.record-trace summary').all()) await summary.click();
+  await expect(page.locator('.record-trace[open]')).toHaveCount(3);
+  await scan(page, `${theme} / record comparison with all recovery traces open`);
 }

@@ -150,9 +150,9 @@ function kdfSchematic(r: BenchResult): string {
   for (let i = 0; i < blocks; i++) cells += `<span class="sch-block" style="--b:${i}"></span>`;
   const label = kdf.startsWith('scrypt') ? 'scrypt' : 'Argon2id';
   return `
-    <div class="schematic schematic-mem" role="img" aria-label="${label} schematic: a large array of memory blocks written then re-read in a data-dependent order.">
-      <div class="sch-blocks">${cells}</div>
-      <p class="sch-note"><strong>Memory-hard:</strong> fill a large array of RAM blocks, then re-read them in a password-dependent order. Skipping the RAM changes the answer — so an attacker must <em>pay the RAM</em> for every guess.</p>
+    <div class="schematic schematic-mem">
+      <div class="sch-blocks" role="img" aria-label="${label} schematic: a large array of memory blocks written then re-read according to the algorithm.">${cells}</div>
+      <p class="sch-note"><strong>Memory-hard:</strong> fill and revisit a large array of RAM blocks. The chart models full evaluations at this working-set size; it excludes time–memory trade-offs and <a href="#record-design">record leaks that bypass evaluation</a>.</p>
     </div>`;
 }
 
@@ -273,7 +273,7 @@ export function renderResults(results: BenchResult[], meta?: RenderMeta): string
     <div class="charts">
       <div class="bar-chart">
         <h2>Defender cost: wall-clock time</h2>
-        <p class="chart-caption">How long one derivation takes on this machine. Longer is safer — but only up to what your users will tolerate.</p>
+        <p class="chart-caption">How long one derivation takes on this machine. More work can raise the cost of full guesses, but does not by itself establish password security. The complete stored record also matters.</p>
         ${timeBars}
       </div>
       <div class="bar-chart" id="mem-chart" data-scale="linear"
@@ -308,7 +308,7 @@ function attackerRig(results: BenchResult[]): string {
   return `
     <section class="rig" aria-labelledby="rig-h">
       <h2 class="rig-h" id="rig-h">The RAM wall: why more cores stop helping</h2>
-      <p class="rig-cap">One attacker box has a fixed pool of fast RAM and thousands of compute lanes. Every in-flight guess must hold its whole working set in that RAM. For a compute-hard KDF the working set is a rounding error, so lanes pack in until <em>compute</em> is the limit. For a memory-hard KDF the RAM fills after a handful of guesses and the rest of the cores <strong>sit idle</strong> — that idle silicon is the whole point of memory-hardness.</p>
+      <p class="rig-cap">This illustrative attacker box has a fixed pool of fast RAM and thousands of compute lanes. The model assigns each in-flight full evaluation its nominal working set. For a compute-hard KDF, lanes pack in until <em>compute</em> is the limit. For a memory-hard KDF the RAM fills sooner and the other cores <strong>sit idle</strong> in this model. Real attackers can explore time–memory trade-offs and hardware strategies; a leaking record can bypass the KDF entirely. This is not a universal attack-cost lower bound.</p>
       <div class="rig-lanes" id="rig-lanes" aria-hidden="true"></div>
       <p class="rig-status" id="rig-status" role="status" aria-live="polite"></p>
       <div class="rig-control">
@@ -398,7 +398,7 @@ export function wireAttackerRig(root: ParentNode = document): void {
     });
     const ramGiB = (ATTACKER.ramKB / (1024 * 1024)).toFixed(0);
     if (ramBound) {
-      status!.innerHTML = `RAM-bound: at <strong>${humanKBLocal(argonMemKB)}</strong>/guess, only <strong>${fit.toLocaleString()}</strong> of the rig’s ${ATTACKER.parallelLanes.toLocaleString()} cores fit in ${ramGiB} GiB of RAM. The other <strong>${(ATTACKER.parallelLanes - fit).toLocaleString()}</strong> sit idle — adding more cores buys the attacker nothing.`;
+      status!.innerHTML = `RAM-bound: at <strong>${humanKBLocal(argonMemKB)}</strong>/guess, only <strong>${fit.toLocaleString()}</strong> of the rig’s ${ATTACKER.parallelLanes.toLocaleString()} cores fit in ${ramGiB} GiB of RAM. The other <strong>${(ATTACKER.parallelLanes - fit).toLocaleString()}</strong> sit idle — adding more cores does not help within this full-evaluation model.`;
     } else {
       status!.innerHTML = `Compute-bound: at <strong>${humanKBLocal(argonMemKB)}</strong>/guess the RAM is not the limit — all <strong>${ATTACKER.parallelLanes.toLocaleString()}</strong> cores run. Here the attacker <em>is</em> helped by more cores. Raise the memory to hit the RAM wall.`;
     }
