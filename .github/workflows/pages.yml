@@ -30,6 +30,17 @@ jobs:
       - run: npm run build
       - name: Install Playwright browser
         run: npx playwright install --with-deps chromium
+      - name: Accessibility + screen-reader audit (axe, SR tree, Lighthouse)
+        # `node audit/run.mjs`, not `npm run audit`: the audit script is
+        # `npm run build && node audit/run.mjs`, and `npm run build` has already
+        # run above, so going through the script would build dist a second time
+        # for nothing. The harness builds nothing itself -- it serves the dist/
+        # this job already produced.
+        #
+        # Placed here, directly after the Chromium install it needs, so that
+        # whether this audit is red or green is never decided by a different
+        # gate failing first.
+        run: node audit/run.mjs
       - name: Browser gate (claims + WCAG A/AA axe-core)
         run: npm run test:e2e
       - uses: actions/upload-pages-artifact@v5
