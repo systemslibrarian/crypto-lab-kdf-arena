@@ -67,8 +67,7 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
           extra computation; the trade-off depends on the construction and attack model.
           The rig models full evaluations with their nominal working set, not every attack.</dd>
         <dt>lanes / parallelism (p)</dt>
-        <dd>How many independent threads an Argon2id/scrypt computation splits
-          into. Tunes how the memory-hard work maps onto multi-core hardware.</dd>
+        <dd>Argon2id uses p synchronized lanes. In scrypt, p sets the number of independent ROMix inputs. These settings describe the algorithm. They do not count browser threads.</dd>
         <dt>KiB</dt>
         <dd>Kibibyte = 1024 bytes (binary), distinct from a kB = 1000 bytes.
           Argon2id's memory parameter is counted in KiB; 65,536 KiB = 64 MiB.</dd>

@@ -61,7 +61,7 @@ async function readCards(page: Page): Promise<Card[]> {
         kdf: text('h3').trim(),
         timeMs: Number(text('.time').replace(/[^0-9.]/g, '')),
         params,
-        memoryKB: Number((text('.memory').match(/~([\d,]+) KB/)?.[1] ?? '').replace(/,/g, '')),
+        memoryKB: Number((text('.memory').match(/~([\d,]+) KiB/)?.[1] ?? '').replace(/,/g, '')),
         rateText: text('.attacker-rate').trim(),
         bound: text('.attacker-bound').trim(),
         keyHex: text('.output-preview code').replace(/[^0-9a-f]/g, ''),

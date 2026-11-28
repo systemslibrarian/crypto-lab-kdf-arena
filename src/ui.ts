@@ -27,7 +27,7 @@ function formatRate(n: number): string {
 function humanKB(memKB: number): string {
   if (memKB >= 1024 * 1024) return `${(memKB / (1024 * 1024)).toLocaleString(undefined, { maximumFractionDigits: 1 })} GiB`;
   if (memKB >= 1024) return `${(memKB / 1024).toLocaleString(undefined, { maximumFractionDigits: 0 })} MiB`;
-  return `~${memKB.toLocaleString()} KB`;
+  return `~${memKB.toLocaleString()} KiB`;
 }
 
 /**
@@ -199,7 +199,7 @@ export function renderResults(results: BenchResult[], meta?: RenderMeta): string
         <p class="time">${r.timeMs.toFixed(1)}<span class="time-unit"> ms</span></p>
         <p class="params">${paramsStr}</p>
         ${kdfSchematic(r)}
-        <p class="memory">Nominal memory: ~${r.memoryNominalKB.toLocaleString()} KB <span class="memory-caveat" title="Algorithm-defined working-set size, not measured RAM. HKDF/PBKDF2 are compute-bound, so their footprint is tiny and approximate.">(defined, not measured)</span></p>
+        <p class="memory">Nominal memory: ~${r.memoryNominalKB.toLocaleString()} KiB <span class="memory-caveat" title="Algorithm-defined working-set size, not measured RAM. HKDF/PBKDF2 are compute-bound, so their footprint is tiny and approximate.">(defined, not measured)</span></p>
         <p class="attacker" title="Order-of-magnitude estimate from this run's time and the algorithm's defined memory cost, against one hypothetical ${rigDesc} rig. Not a benchmark of any real GPU.">
           <span class="attacker-label">Attacker: </span>
           <span class="attacker-rate">~${formatRate(atk.guessesPerSec)}</span> guesses/sec
@@ -235,7 +235,7 @@ export function renderResults(results: BenchResult[], meta?: RenderMeta): string
       const linPct = (memKB / maxMemKB) * 100;
       const logPct = (Math.log10(memKB) / maxMemLog) * 100;
       const labelId = `bar-m-${r.kdf.replace(/\W/g, '')}`;
-      const valueText = `${r.memoryNominalKB.toLocaleString()} kilobytes per guess`;
+      const valueText = `${r.memoryNominalKB.toLocaleString()} kibibytes per guess`;
       return `
       <div class="bar-row">
         <span class="bar-label" id="${labelId}">${escapeHtml(r.kdf)}</span>
@@ -408,7 +408,7 @@ export function wireAttackerRig(root: ParentNode = document): void {
   function humanKBLocal(memKB: number): string {
     if (memKB >= 1024 * 1024) return `${(memKB / (1024 * 1024)).toFixed(1)} GiB`;
     if (memKB >= 1024) return `${Math.round(memKB / 1024)} MiB`;
-    return `${memKB} KB`;
+    return `${memKB} KiB`;
   }
 
   slider.addEventListener('input', () => {

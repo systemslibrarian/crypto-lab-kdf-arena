@@ -161,6 +161,20 @@ describe('bench wrappers derive correct, deterministic keys', () => {
     expect(r.memoryNominalKB).toBe(256);
   });
 
+  test('Argon2id reports effective blocks while hashing the requested memory value', async () => {
+    const input = { password: 'notice', salt: new Uint8Array(16).fill(9), outputLength: 32 };
+    const aligned = await runArgon2id(input, 2, 256, 2);
+    const rounded = await runArgon2id(input, 2, 257, 2);
+    expect(rounded.params).toMatchObject({ memory: 257, effectiveBlocks: 256, version: '0x13' });
+    expect(aligned.params.effectiveBlocks).toBe(256);
+    expect(rounded.memoryNominalKB).toBe(256);
+    expect(rounded.note).toContain('256 one-KiB blocks');
+    expect(hex(rounded.output)).not.toBe(hex(aligned.output));
+    expect(hex(rounded.output)).toBe(hex(argon2id(input.password, input.salt, {
+      t: 2, m: 257, p: 2, version: 0x13, dkLen: 32,
+    })));
+  });
+
   test('lowering the cost parameter changes the derived key (params are live)', async () => {
     const salt = new Uint8Array(16).fill(7);
     const strong = await runPBKDF2({ password: 'pw', salt, outputLength: 32 }, 600_000);

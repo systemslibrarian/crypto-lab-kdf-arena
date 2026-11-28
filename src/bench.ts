@@ -126,6 +126,7 @@ export async function runScrypt(
     timeMs,
     output,
     memoryNominalKB: Math.round((128 * N * r) / 1024),
+    note: 'The scrypt estimate counts the main ROMix table (128 × N × r bytes). Temporary buffers and browser overhead are additional.',
   };
 }
 
@@ -142,15 +143,19 @@ export async function runArgon2id(
     t: time,
     m: memory,
     p: parallelism,
+    version: 0x13,
     dkLen: p.outputLength,
   });
   const timeMs = performance.now() - start;
+  const segmentGroup = 4 * parallelism;
+  const effectiveBlocks = Math.floor(memory / segmentGroup) * segmentGroup;
   return {
     kdf: 'Argon2id',
-    params: { time, memory, parallelism, outputLength: p.outputLength },
+    params: { time, memory, parallelism, version: '0x13', effectiveBlocks, outputLength: p.outputLength },
     timeMs,
     output,
-    memoryNominalKB: memory,
+    memoryNominalKB: effectiveBlocks,
+    note: `Requested ${memory.toLocaleString('en-US')} KiB. Argon2id uses ${effectiveBlocks.toLocaleString('en-US')} one-KiB blocks after rounding down to a multiple of 4 × ${parallelism} lanes. The requested memory value is still an input to the hash.`,
   };
 }
 
